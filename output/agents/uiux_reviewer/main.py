@@ -307,7 +307,7 @@ async def lifespan(application: FastAPI):
         capabilities=CAPABILITIES,
     )
     await queue.recover_stuck_tasks()
-    _await queue.recover_stuck_tasks()
+    await queue.recover_stuck_tasks()
     worker_task = asyncio.create_task(_worker())
     yield
     log.info("agent_shutting_down", agent=AGENT_NAME)
@@ -403,7 +403,7 @@ async def health() -> Dict[str, Any]:
         "status": "ok",
         "agent": AGENT_NAME,
         "port": PORT,
-        "queue_size": queue.size(),
+        "queue_size": await queue.size(),
         "version": VERSION,
         "capabilities": CAPABILITIES,
     }

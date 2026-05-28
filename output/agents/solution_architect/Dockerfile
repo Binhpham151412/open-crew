@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy requirements and install Python packages
 COPY agents/solution_architect/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --upgrade pip && \
+    pip install --no-cache-dir --timeout=120 --retries=5 --prefix=/install -r requirements.txt
 
 # Stage 2: Runtime — lean image
 FROM python:3.11-slim
@@ -33,7 +33,11 @@ WORKDIR /app
 COPY shared/ /app/shared/
 
 # Copy agent code
-COPY agents/solution_architect/ /app/agents/solution_architect/
+COPY agents/solution_architect/main.py /app/main.py
+COPY agents/solution_architect/prompts.py /app/prompts.py
+COPY agents/solution_architect/tools.py /app/tools.py
+COPY agents/solution_architect/agent.json /app/agent.json
+COPY agents/solution_architect/__init__.py /app/__init__.py
 
 # Set proper ownership
 RUN chown -R agentuser:agentuser /app
@@ -53,4 +57,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8003/health || exit 1
 
 # Run the FastAPI application with uvicorn
-CMD ["uvicorn", "agents.solution_architect.main:app", "--host", "0.0.0.0", "--port", "8003"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"]

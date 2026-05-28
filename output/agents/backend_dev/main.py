@@ -22,6 +22,7 @@ from typing import Any
 from uuid import uuid4
 
 import httpx
+import logging
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,7 +53,7 @@ structlog.configure(
         structlog.processors.JSONRenderer(),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(
-        min_level=os.environ.get("LOG_LEVEL", "INFO").upper()
+        min_level=logging.INFO
     ),
     context_class=dict,
     logger_factory=structlog.PrintLoggerFactory(),
@@ -476,7 +477,7 @@ async def lifespan(application: FastAPI):
     )
 
     # Start background worker
-    await queue.recover_stuck_tasks()
+    await task_queue.recover_stuck_tasks()
     _worker_task = asyncio.create_task(worker_loop())
     logger.info("background_worker_launched")
 

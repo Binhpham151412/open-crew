@@ -15,9 +15,9 @@ COPY agents/frontend_dev/requirements.txt /build/agent/requirements.txt
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r /build/shared/requirements.txt && \
-    pip install --no-cache-dir -r /build/agent/requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --timeout=120 --retries=5 -r /build/shared/requirements.txt && \
+    pip install --no-cache-dir --timeout=120 --retries=5 -r /build/agent/requirements.txt
 
 
 # ---- Runtime stage ----
@@ -47,14 +47,15 @@ ENV PATH="/opt/venv/bin:$PATH" \
 # Copy shared library
 COPY shared/ /app/shared/
 
-# Copy agent code
-COPY agents/frontend_dev/ /app/agent/
+# Copy agent code directly to /app/
+COPY agents/frontend_dev/main.py /app/main.py
+COPY agents/frontend_dev/prompts.py /app/prompts.py
+COPY agents/frontend_dev/tools.py /app/tools.py
+COPY agents/frontend_dev/agent.json /app/agent.json
+COPY agents/frontend_dev/__init__.py /app/__init__.py
 
 # Ensure shared is importable as a package
 RUN touch /app/shared/__init__.py 2>/dev/null || true
-
-# Set working directory to agent folder so uvicorn can find main:app
-WORKDIR /app/agent
 
 # Ownership
 RUN chown -R appuser:appuser /app
@@ -66,4 +67,4 @@ EXPOSE 8004
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8004/health || exit 1
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8004"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8004"]

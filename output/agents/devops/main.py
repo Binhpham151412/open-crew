@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 
 import asyncio
 import os
@@ -34,7 +35,7 @@ structlog.configure(
         structlog.processors.JSONRenderer(),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(
-        int(os.getenv("LOG_LEVEL", "20"))
+        getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)
     ),
     context_class=dict,
     logger_factory=structlog.PrintLoggerFactory(),
@@ -166,7 +167,7 @@ async def health() -> JSONResponse:
             "agent": AGENT_NAME,
             "display_name": DISPLAY_NAME,
             "port": PORT,
-            "queue_size": queue.size(),
+            "queue_size": await queue.size(),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     )

@@ -9,7 +9,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY agents/devops/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --prefix=/install -r requirements.txt
 
 # ---- Stage 2: Production image ----
 FROM python:3.11-slim

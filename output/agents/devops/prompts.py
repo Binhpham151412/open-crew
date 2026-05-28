@@ -251,7 +251,7 @@ from the Solution Architect (ADR, system diagrams, DB schema).
 
 {_DEBATE_PROTOCOL}
 
-{__AUTO_APPROVE_RULES}
+{_AUTO_APPROVE_RULES}
 
 ## MCP Tools Available
 

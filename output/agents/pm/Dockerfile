@@ -4,7 +4,7 @@ FROM python:3.11-slim AS builder
 WORKDIR /build
 
 COPY agents/pm/requirements.txt requirements.txt
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --prefix=/install -r requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.11-slim
@@ -30,8 +30,12 @@ COPY --from=builder /install /usr/local
 # Copy shared library
 COPY shared/ /app/shared/
 
-# Copy agent code
-COPY agents/pm/ /app/agents/pm/
+# Copy agent code directly to /app/
+COPY agents/pm/main.py /app/main.py
+COPY agents/pm/prompts.py /app/prompts.py
+COPY agents/pm/tools.py /app/tools.py
+COPY agents/pm/agent.json /app/agent.json
+COPY agents/pm/__init__.py /app/__init__.py
 
 # Ensure non-root user owns the files
 RUN chown -R appuser:appuser /app
@@ -43,4 +47,4 @@ EXPOSE 8001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8001/health || exit 1
 
-CMD ["uvicorn", "agents.pm.main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]

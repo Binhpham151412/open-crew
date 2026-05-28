@@ -15,8 +15,8 @@ COPY agents/po/requirements.txt ./agent-requirements.txt
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r shared-requirements.txt -r agent-requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --timeout=120 --retries=5 -r shared-requirements.txt -r agent-requirements.txt
 
 # ---- Runtime stage ----
 FROM python:3.11-slim AS runtime

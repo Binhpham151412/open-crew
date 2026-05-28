@@ -1096,7 +1096,7 @@ async def collect_source_context(
 # ---------------------------------------------------------------------------
 
 
-def get_tools() -> Dict[str, Callable]:
+def get_tools(mcp=None) -> Dict[str, Callable]:
     """Return the QA / Tester agent's tool registry.
 
     Each key is a tool name (used in MCP-style calls or local invocation)

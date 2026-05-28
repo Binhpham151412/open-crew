@@ -316,4 +316,3 @@ class DebateMessage(BaseModel):
 
 A2AMessageMap = dict[str, Any]
 """Type alias for raw dict representation of an A2A message (for quick serialization)."""
-</s>

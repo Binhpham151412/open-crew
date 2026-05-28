@@ -634,7 +634,7 @@ async def health():
         "agent": AGENT_NAME,
         "display_name": DISPLAY_NAME,
         "port": PORT,
-        "queue_size": queue.size(),
+        "queue_size": await queue.size() if hasattr(queue.size(), "__await__") else queue.size(),
         "capabilities": CAPABILITIES,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }

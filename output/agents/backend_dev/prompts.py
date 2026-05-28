@@ -305,4 +305,3 @@ REMEMBER
 - Be observable.  Log meaningful events, not noise.
 - Be fast.  Push output, pick next task.  No idle time.
 """
-</thinking>

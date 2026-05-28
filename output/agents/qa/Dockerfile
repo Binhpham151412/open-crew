@@ -8,7 +8,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY agents/qa/requirements.txt /build/requirements.txt
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --prefix=/install -r requirements.txt
 
 FROM python:3.11-slim
 
@@ -29,7 +29,11 @@ WORKDIR /app
 COPY shared/ /app/shared/
 
 # Copy agent code
-COPY agents/qa/ /app/agents/qa/
+COPY agents/qa/main.py /app/main.py
+COPY agents/qa/prompts.py /app/prompts.py
+COPY agents/qa/tools.py /app/tools.py
+COPY agents/qa/agent.json /app/agent.json
+COPY agents/qa/__init__.py /app/__init__.py
 
 # Set ownership
 RUN chown -R agentuser:agentuser /app

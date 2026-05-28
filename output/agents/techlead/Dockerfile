@@ -5,7 +5,7 @@ WORKDIR /build
 COPY agents/techlead/requirements.txt .
 
 RUN python -m venv /opt/venv \
-    && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+    && /opt/venv/bin/pip install --no-cache-dir --timeout=120 --retries=5 -r requirements.txt
 
 FROM python:3.11-slim
 
@@ -21,7 +21,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 
 COPY shared/ /app/shared/
-COPY agents/techlead/ /app/agents/techlead/
+COPY agents/techlead/main.py /app/main.py
+COPY agents/techlead/prompts.py /app/prompts.py
+COPY agents/techlead/tools.py /app/tools.py
+COPY agents/techlead/agent.json /app/agent.json
+COPY agents/techlead/__init__.py /app/__init__.py
 
 RUN chown -R agent:agent /app
 
@@ -32,4 +36,4 @@ EXPOSE 8010
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8010/health || exit 1
 
-CMD ["uvicorn", "agents.techlead.main:app", "--host", "0.0.0.0", "--port", "8010"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8010"]

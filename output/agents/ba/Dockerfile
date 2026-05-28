@@ -10,7 +10,7 @@ RUN apt-get update && \
 
 # Copy and install Python dependencies
 COPY agents/ba/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --prefix=/install -r requirements.txt
 
 # Runtime stage
 FROM python:3.11-slim

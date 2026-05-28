@@ -14,9 +14,9 @@ COPY agents/backend_dev/requirements.txt /build/agent/requirements.txt
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r /build/shared/requirements.txt && \
-    pip install --no-cache-dir -r /build/agent/requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --timeout=120 --retries=5 -r /build/shared/requirements.txt && \
+    pip install --no-cache-dir --timeout=120 --retries=5 -r /build/agent/requirements.txt
 
 
 FROM python:3.11-slim AS runtime
@@ -46,7 +46,11 @@ RUN groupadd --gid 1000 appuser && \
 COPY shared/ /app/shared/
 
 # Copy agent code
-COPY agents/backend_dev/ /app/agents/backend_dev/
+COPY agents/backend_dev/main.py /app/main.py
+COPY agents/backend_dev/prompts.py /app/prompts.py
+COPY agents/backend_dev/tools.py /app/tools.py
+COPY agents/backend_dev/agent.json /app/agent.json
+COPY agents/backend_dev/__init__.py /app/__init__.py
 
 # Set ownership and switch to non-root user
 RUN chown -R appuser:appuser /app
@@ -57,4 +61,4 @@ EXPOSE 8005
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8005/health || exit 1
 
-CMD ["uvicorn", "agents.backend_dev.main:app", "--host", "0.0.0.0", "--port", "8005"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8005"]

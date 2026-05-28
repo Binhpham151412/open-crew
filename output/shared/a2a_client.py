@@ -502,3 +502,43 @@ async def push_pooled(
     """
     client = await get_global_client()
     return await push(to_agent, message, client=client, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Convenience class wrapper
+# ---------------------------------------------------------------------------
+
+
+class A2AClient:
+    """Class-based wrapper around the module-level push functions.
+
+    Usage::
+
+        client = A2AClient()
+        await client.send(to_agent="pm", message={...})
+        await client.close()
+    """
+
+    def __init__(self) -> None:
+        self._client: httpx.AsyncClient | None = None
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(timeout=DEFAULT_TIMEOUT)
+        return self._client
+
+    async def send(
+        self,
+        to_agent: str,
+        message: dict[str, Any],
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Send an A2A message to *to_agent*."""
+        client = await self._get_client()
+        return await push(to_agent, message, client=client, **kwargs)
+
+    async def close(self) -> None:
+        """Close the underlying HTTP client."""
+        if self._client is not None and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None

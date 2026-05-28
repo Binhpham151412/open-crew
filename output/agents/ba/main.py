@@ -11,6 +11,7 @@ Endpoints:
 """
 
 from __future__ import annotations
+import logging
 
 import asyncio
 import json
@@ -54,7 +55,7 @@ structlog.configure(
         structlog.processors.JSONRenderer(),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(
-        int(os.getenv("LOG_LEVEL", "20"))  # 20 = INFO
+        getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)  # 20 = INFO
     ),
     context_class=dict,
     logger_factory=structlog.PrintLoggerFactory(),
@@ -176,7 +177,7 @@ async def health() -> JSONResponse:
     """Liveness and readiness probe."""
     queue_size = 0
     try:
-        queue_size = queue.size()
+        queue_size = await queue.size()
     except Exception:
         pass
 

@@ -9,7 +9,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY agents/security_reviewer/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 --prefix=/install -r requirements.txt
 
 # ---- Stage 2: Production image ----
 FROM python:3.11-slim AS production
@@ -36,7 +36,11 @@ COPY --from=builder /install /usr/local
 COPY shared/ /app/shared/
 
 # Copy agent source code
-COPY agents/security_reviewer/ /app/agents/security_reviewer/
+COPY agents/security_reviewer/main.py /app/main.py
+COPY agents/security_reviewer/prompts.py /app/prompts.py
+COPY agents/security_reviewer/tools.py /app/tools.py
+COPY agents/security_reviewer/agent.json /app/agent.json
+COPY agents/security_reviewer/__init__.py /app/__init__.py
 
 # Ensure the shared package is importable
 ENV PYTHONPATH="/app" \
@@ -53,4 +57,4 @@ EXPOSE 8007
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8007/health || exit 1
 
-CMD ["uvicorn", "agents.security_reviewer.main:app", "--host", "0.0.0.0", "--port", "8007"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8007"]

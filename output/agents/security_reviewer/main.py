@@ -12,6 +12,7 @@ GET  /health                   Health check
 """
 
 from __future__ import annotations
+import logging
 
 import asyncio
 import os
@@ -70,7 +71,7 @@ structlog.configure(
         structlog.processors.JSONRenderer(),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(
-        int(os.getenv("LOG_LEVEL", "20"))  # 20 = INFO
+        getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)  # 20 = INFO
     ),
     context_class=dict,
     logger_factory=structlog.PrintLoggerFactory(),
@@ -675,7 +676,7 @@ async def lifespan(application: FastAPI):
     )
 
     # Start background worker
-    await queue.recover_stuck_tasks()
+    await task_queue.recover_stuck_tasks()
     _worker_task = asyncio.create_task(worker_loop())
 
     yield
@@ -777,7 +778,7 @@ async def receive_task(request: Request) -> JSONResponse:
 @app.get("/health")
 async def health() -> JSONResponse:
     """Health check endpoint for monitoring and service discovery."""
-    queue_size = task_queue.size() if hasattr(task_queue, "size") else 0
+    queue_size = await task_queue.size() if hasattr(task_queue, "size") else 0
     return JSONResponse(
         content={
             "status": "ok",

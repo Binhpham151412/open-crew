@@ -6,7 +6,7 @@
 x-common-env: &common-env
   REDIS_URL: redis://redis:6379/0
   A2A_BASE_URL: http://localhost
-  LOG_LEVEL: ${LOG_LEVEL:-info}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
 
 x-agent-defaults: &agent-defaults
   restart: unless-stopped
