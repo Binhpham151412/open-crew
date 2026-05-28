@@ -1,0 +1,1704 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenHand — Agent Control Panel</title>
+<style>
+/* ─── Tokens (from spec) ────────────────────────────────────────── */
+:root {
+  --primary: #2563EB;
+  --primary-hover: #3b82f6;
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --surface-hover: #263548;
+  --surface-active: #334155;
+  --text: #F8FAFC;
+  --muted: #94A3B8;
+  --border: #334155;
+  --border-subtle: #1e293b;
+  --white: #ffffff;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --sidebar-w: 240px;
+  --topbar-h: 56px;
+  --footer-h: 40px;
+  --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow: hidden;
+}
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  border: none;
+  outline: none;
+  background: none;
+}
+button { cursor: pointer; }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.6; }
+
+/* ─── Layout Shell ──────────────────────────────────────────────── */
+.shell {
+  display: grid;
+  grid-template-areas:
+    "topbar topbar"
+    "sidebar main"
+    "sidebar footer";
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--topbar-h) 1fr var(--footer-h);
+  height: 100vh;
+}
+
+/* ─── Topbar ────────────────────────────────────────────────────── */
+.topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.topbar-brand svg { width: 28px; height: 28px; }
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--muted);
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────────── */
+.sidebar {
+  grid-area: sidebar;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--space-4) 0;
+}
+.sidebar-section {
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.sidebar-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-1);
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: all var(--transition);
+  text-decoration: none;
+  cursor: pointer;
+}
+.sidebar-link:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  text-decoration: none;
+}
+.sidebar-link.active {
+  background: var(--primary);
+  color: var(--white);
+}
+.sidebar-link svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.sidebar-link.active svg { opacity: 1; }
+.sidebar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-3) var(--space-4);
+}
+
+/* ─── Main Content ──────────────────────────────────────────────── */
+.main {
+  grid-area: main;
+  overflow-y: auto;
+  padding: var(--space-6);
+  background: var(--bg);
+}
+.page { display: none; }
+.page.active { display: block; }
+.page-header {
+  margin-bottom: var(--space-6);
+}
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-1);
+}
+.page-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ─── Footer ────────────────────────────────────────────────────── */
+.footer {
+  grid-area: footer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+/* ─── Cards ─────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Status Dot ────────────────────────────────────────────────── */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot.online { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.status-dot.offline { background: var(--muted); }
+.status-dot.working { background: var(--warning); box-shadow: 0 0 6px var(--warning); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ─── Badge ─────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.badge-success { background: rgba(22,163,74,0.15); color: var(--success); }
+.badge-warning { background: rgba(217,119,6,0.15); color: var(--warning); }
+.badge-danger { background: rgba(220,38,38,0.15); color: var(--danger); }
+.badge-info { background: rgba(37,99,235,0.15); color: var(--primary); }
+.badge-muted { background: rgba(148,163,184,0.1); color: var(--muted); }
+
+/* ─── Buttons ───────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--primary);
+  color: var(--white);
+}
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-secondary {
+  background: var(--surface-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--surface-active); }
+.btn-ghost {
+  color: var(--muted);
+}
+.btn-ghost:hover { color: var(--text); background: var(--surface-hover); }
+.btn-danger {
+  background: rgba(220,38,38,0.15);
+  color: var(--danger);
+}
+.btn-danger:hover { background: rgba(220,38,38,0.25); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* ─── Form Fields ───────────────────────────────────────────────── */
+.field { margin-bottom: var(--space-4); }
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: var(--space-1);
+  color: var(--muted);
+}
+.field-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text);
+  transition: border-color var(--transition);
+}
+.input:focus { border-color: var(--primary); }
+.input-mono { font-family: var(--font-mono); font-size: 12px; }
+.textarea {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text);
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color var(--transition);
+}
+.textarea:focus { border-color: var(--primary); }
+.select {
+  padding: 6px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: var(--border);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background var(--transition);
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--primary); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: var(--white);
+  border-radius: 50%;
+  transition: transform var(--transition);
+}
+.toggle.on::after { transform: translateX(18px); }
+
+/* ─── Slider ────────────────────────────────────────────────────── */
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.slider-val {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ─── Grid Layouts ──────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+@media (max-width: 1200px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+
+/* ─── Agent Status Card ─────────────────────────────────────────── */
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+.agent-row:hover { background: var(--surface-hover); }
+.agent-name {
+  font-weight: 500;
+  font-size: 14px;
+  flex: 1;
+}
+.agent-tokens {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ─── Task Card ─────────────────────────────────────────────────── */
+.task-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+  transition: border-color var(--transition);
+}
+.task-card:hover { border-color: var(--primary); }
+.task-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  cursor: pointer;
+}
+.task-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 40px;
+}
+.task-title { flex: 1; font-weight: 500; font-size: 14px; }
+.task-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.task-body {
+  display: none;
+  padding: 0 var(--space-4) var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.task-card.expanded .task-body { display: block; padding-top: var(--space-4); }
+.task-card.expanded .task-chevron { transform: rotate(180deg); }
+.task-chevron {
+  transition: transform var(--transition);
+  color: var(--muted);
+}
+
+/* ─── Timeline ──────────────────────────────────────────────────── */
+.timeline {
+  position: relative;
+  padding-left: var(--space-6);
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--border);
+}
+.timeline-item {
+  position: relative;
+  padding-bottom: var(--space-4);
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-dot {
+  position: absolute;
+  left: calc(-1 * var(--space-6) + 3px);
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  border: 2px solid var(--surface);
+}
+.timeline-dot.info { background: var(--primary); }
+.timeline-dot.warn { background: var(--warning); }
+.timeline-dot.success { background: var(--success); }
+.timeline-dot.challenge { background: var(--danger); }
+.timeline-time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.timeline-text {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ─── Log Viewer ────────────────────────────────────────────────── */
+.log-viewer {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-y: auto;
+  max-height: 600px;
+  padding: var(--space-3);
+}
+.log-row {
+  display: flex;
+  gap: var(--space-3);
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.3);
+}
+.log-time { color: var(--muted); min-width: 70px; flex-shrink: 0; }
+.log-agent {
+  min-width: 80px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+.log-level {
+  min-width: 45px;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.log-level.info { color: var(--primary); }
+.log-level.warn { color: var(--warning); }
+.log-level.error { color: var(--danger); }
+.log-level.debug { color: var(--muted); }
+.log-msg { color: var(--text); word-break: break-word; }
+
+/* ─── Token Chart (SVG bar chart) ───────────────────────────────── */
+.chart-container {
+  width: 100%;
+  height: 180px;
+  position: relative;
+}
+.chart-container svg { width: 100%; height: 100%; }
+.chart-bar { transition: opacity 150ms; }
+.chart-bar:hover { opacity: 0.8; }
+.chart-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--muted);
+}
+.chart-total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.chart-total-num {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+}
+.chart-total-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ─── MCP / A2A Connection Row ──────────────────────────────────── */
+.conn-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+.conn-row:hover { background: var(--surface-hover); }
+.conn-name { font-weight: 500; font-size: 14px; min-width: 120px; }
+.conn-url {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Agent Expandable Card ─────────────────────────────────────── */
+.agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-3);
+  overflow: hidden;
+}
+.agent-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.agent-card-header:hover { background: var(--surface-hover); }
+.agent-card-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 15px;
+}
+.agent-card-model {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+.agent-card-body {
+  display: none;
+  padding: 0 var(--space-5) var(--space-5);
+  border-top: 1px solid var(--border);
+}
+.agent-card.expanded .agent-card-body { display: block; padding-top: var(--space-5); }
+.agent-card.expanded .agent-card-chevron { transform: rotate(180deg); }
+.agent-card-chevron {
+  color: var(--muted);
+  transition: transform var(--transition);
+}
+.tools-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.tool-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+}
+
+/* ─── Settings Grid ─────────────────────────────────────────────── */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--space-3) var(--space-4);
+  align-items: center;
+}
+.settings-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.settings-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ─── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .shell {
+    grid-template-areas:
+      "topbar"
+      "main"
+      "footer";
+    grid-template-columns: 1fr;
+  }
+  .sidebar { display: none; }
+  .main { padding: var(--space-4); }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ─── Topbar ─────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="6" fill="var(--primary)"/>
+        <path d="M8 10h12M8 14h8M8 18h10" stroke="var(--white)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>OpenHand</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-status">
+        <span class="status-dot online"></span>
+        <span>System running</span>
+      </div>
+      <div class="topbar-user">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>
+        admin@openhand
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Sidebar ────────────────────────────────────────── -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Main</div>
+      <a class="sidebar-link active" data-page="dashboard" onclick="navigate('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="sidebar-link" data-page="tasks" onclick="navigate('tasks')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tasks
+      </a>
+      <a class="sidebar-link" data-page="agents" onclick="navigate('agents')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Agents
+      </a>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">System</div>
+      <a class="sidebar-link" data-page="config" onclick="navigate('config')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Config
+      </a>
+      <a class="sidebar-link" data-page="logs" onclick="navigate('logs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Logs
+      </a>
+    </div>
+
+    <div style="flex:1;"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-divider"></div>
+      <a class="sidebar-link" style="font-size:12px; color: var(--muted);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        OpenHand v1.0
+      </a>
+    </div>
+  </nav>
+
+  <!-- ─── Main Content ───────────────────────────────────── -->
+  <main class="main">
+
+    <!-- ═══ Dashboard ═══ -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">System overview and agent activity</p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom: var(--space-6);">
+        <!-- Agent Status -->
+        <div class="card" style="grid-column: span 2;">
+          <div class="card-header">
+            <span class="card-title">Agent Status</span>
+            <span class="badge badge-success">5 online</span>
+          </div>
+          <div>
+            <div class="agent-row">
+              <span class="status-dot online"></span>
+              <span class="agent-name">Coding Agent</span>
+              <span class="badge badge-success">online</span>
+              <span class="agent-tokens">12,340 tokens today</span>
+            </div>
+            <div class="agent-row">
+              <span class="status-dot online"></span>
+              <span class="agent-name">BA Agent</span>
+              <span class="badge badge-success">online</span>
+              <span class="agent-tokens">3,210 tokens today</span>
+            </div>
+            <div class="agent-row">
+              <span class="status-dot online"></span>
+              <span class="agent-name">UIUX Agent</span>
+              <span class="badge badge-success">online</span>
+              <span class="agent-tokens">1,050 tokens today</span>
+            </div>
+            <div class="agent-row">
+              <span class="status-dot offline"></span>
+              <span class="agent-name">Tester Agent</span>
+              <span class="badge badge-muted">offline</span>
+              <span class="agent-tokens">0 tokens today</span>
+            </div>
+            <div class="agent-row">
+              <span class="status-dot online"></span>
+              <span class="agent-name">DevOps Agent</span>
+              <span class="badge badge-success">online</span>
+              <span class="agent-tokens">890 tokens today</span>
+            </div>
+            <div class="agent-row">
+              <span class="status-dot online"></span>
+              <span class="agent-name">TechLead Agent</span>
+              <span class="badge badge-success">online</span>
+              <span class="agent-tokens">5,600 tokens today</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Token Usage Chart -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Token Usage</span>
+            <span style="font-size:12px; color:var(--muted); font-family:var(--font-mono);">7 days</span>
+          </div>
+          <div class="chart-container" id="token-chart"></div>
+          <div class="chart-total">
+            <span class="chart-total-num">45,200</span>
+            <span class="chart-total-label">total tokens · est. $0.02</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Tasks -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Recent Tasks</span>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('tasks')">View all →</button>
+        </div>
+        <div class="task-card" onclick="this.classList.toggle('expanded')">
+          <div class="task-header">
+            <span class="task-id">#001</span>
+            <span class="task-title">Build login feature</span>
+            <span class="badge badge-success">done</span>
+            <span class="task-meta">3h ago</span>
+            <svg class="task-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="task-body">
+            <div class="timeline">
+              <div class="timeline-item"><div class="timeline-dot success"></div><div class="timeline-time">14:00</div><div class="timeline-text">TechLead decomposed task into 3 subtasks</div></div>
+              <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:05</div><div class="timeline-text">Coding: implemented OAuth2 + JWT flow</div></div>
+              <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:30</div><div class="timeline-text">Tester: 92% coverage, all tests passing</div></div>
+              <div class="timeline-item"><div class="timeline-dot success"></div><div class="timeline-time">14:35</div><div class="timeline-text">TechLead approved, merged to main</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="task-card" onclick="this.classList.toggle('expanded')">
+          <div class="task-header">
+            <span class="task-id">#002</span>
+            <span class="task-title">Review PR #42</span>
+            <span class="badge badge-warning">working</span>
+            <span class="task-meta">5m ago</span>
+            <svg class="task-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="task-body">
+            <div style="font-size:13px; color:var(--muted); margin-bottom:var(--space-3);">Phase 2/4 — Code Review</div>
+            <div class="timeline">
+              <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:01</div><div class="timeline-text">TechLead assigned → Coding, Tester</div></div>
+              <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:02</div><div class="timeline-text">Coding: reviewing diff (142 lines)</div></div>
+              <div class="timeline-item"><div class="timeline-dot warn"></div><div class="timeline-time">14:05</div><div class="timeline-text">Coding: found 3 issues</div></div>
+              <div class="timeline-item"><div class="timeline-dot warn"></div><div class="timeline-time">14:06</div><div class="timeline-text">Tester: coverage check — 78% (need 80%)</div></div>
+              <div class="timeline-item"><div class="timeline-dot challenge"></div><div class="timeline-time">14:07</div><div class="timeline-text">Tester → Coding: CHALLENGE "missing test X"</div></div>
+              <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:08</div><div class="timeline-text">Coding: accepted, adding test</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="task-card" onclick="this.classList.toggle('expanded')">
+          <div class="task-header">
+            <span class="task-id">#003</span>
+            <span class="task-title">Fix auth bug</span>
+            <span class="badge badge-info">pending</span>
+            <span class="task-meta">just now</span>
+            <svg class="task-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="task-body">
+            <div style="font-size:13px; color:var(--muted);">Waiting for TechLead to decompose and assign agents.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Tasks ═══ -->
+    <div id="page-tasks" class="page">
+      <div class="page-header">
+        <h1 class="page-title">Tasks</h1>
+        <p class="page-subtitle">Submit and track multi-agent tasks</p>
+      </div>
+
+      <!-- New Task Form -->
+      <div class="card" style="margin-bottom: var(--space-6);">
+        <div class="card-header">
+          <span class="card-title">New Task</span>
+        </div>
+        <div class="field">
+          <textarea class="textarea" id="new-task-input" placeholder="Describe the task... e.g. &quot;Build user registration with email verification&quot;" rows="3"></textarea>
+        </div>
+        <div style="display:flex; gap:var(--space-3); align-items:center;">
+          <button class="btn btn-primary" onclick="submitTask()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Submit Task
+          </button>
+          <span style="font-size:12px; color:var(--muted);">TechLead will auto-decompose and assign agents</span>
+        </div>
+      </div>
+
+      <!-- Task List -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">All Tasks</span>
+          <div style="display:flex; gap:var(--space-2);">
+            <button class="btn btn-ghost btn-sm task-filter active" onclick="filterTasks('all', this)">All</button>
+            <button class="btn btn-ghost btn-sm task-filter" onclick="filterTasks('working', this)">Working</button>
+            <button class="btn btn-ghost btn-sm task-filter" onclick="filterTasks('done', this)">Done</button>
+            <button class="btn btn-ghost btn-sm task-filter" onclick="filterTasks('pending', this)">Pending</button>
+          </div>
+        </div>
+        <div id="task-list">
+          <div class="task-card" data-status="done" onclick="this.classList.toggle('expanded')">
+            <div class="task-header">
+              <span class="task-id">#001</span>
+              <span class="task-title">Build login feature</span>
+              <span class="badge badge-success">done</span>
+              <span class="task-meta">3h ago</span>
+              <svg class="task-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="task-body">
+              <div style="font-size:13px; color:var(--muted); margin-bottom:var(--space-3);">Phase 4/4 — Complete</div>
+              <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot success"></div><div class="timeline-time">14:00</div><div class="timeline-text">TechLead decomposed into 3 subtasks</div></div>
+                <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:05</div><div class="timeline-text">Coding: OAuth2 + JWT implementation</div></div>
+                <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:30</div><div class="timeline-text">Tester: 92% coverage, all green</div></div>
+                <div class="timeline-item"><div class="timeline-dot success"></div><div class="timeline-time">14:35</div><div class="timeline-text">Merged to main</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="task-card" data-status="working" onclick="this.classList.toggle('expanded')">
+            <div class="task-header">
+              <span class="task-id">#002</span>
+              <span class="task-title">Review PR #42</span>
+              <span class="badge badge-warning">working</span>
+              <span class="task-meta">5m ago</span>
+              <svg class="task-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="task-body">
+              <div style="font-size:13px; color:var(--muted); margin-bottom:var(--space-3);">Phase 2/4 — Code Review</div>
+              <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:01</div><div class="timeline-text">TechLead assigned → Coding, Tester</div></div>
+                <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:02</div><div class="timeline-text">Coding: reviewing diff (142 lines)</div></div>
+                <div class="timeline-item"><div class="timeline-dot warn"></div><div class="timeline-time">14:05</div><div class="timeline-text">Coding: found 3 issues</div></div>
+                <div class="timeline-item"><div class="timeline-dot warn"></div><div class="timeline-time">14:06</div><div class="timeline-text">Tester: 78% coverage (need 80%)</div></div>
+                <div class="timeline-item"><div class="timeline-dot challenge"></div><div class="timeline-time">14:07</div><div class="timeline-text">Tester → Coding: CHALLENGE "missing test X"</div></div>
+                <div class="timeline-item"><div class="timeline-dot info"></div><div class="timeline-time">14:08</div><div class="timeline-text">Coding: accepted, adding test</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="task-card" data-status="pending" onclick="this.classList.toggle('expanded')">
+            <div class="task-header">
+              <span class="task-id">#003</span>
+              <span class="task-title">Fix auth bug</span>
+              <span class="badge badge-info">pending</span>
+              <span class="task-meta">just now</span>
+              <svg class="task-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="task-body">
+              <div style="font-size:13px; color:var(--muted);">Waiting for TechLead to decompose and assign agents.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Agents ═══ -->
+    <div id="page-agents" class="page">
+      <div class="page-header">
+        <h1 class="page-title">Agents</h1>
+        <p class="page-subtitle">Configure and monitor individual agents</p>
+      </div>
+
+      <div id="agents-list">
+        <!-- Coding Agent -->
+        <div class="agent-card" onclick="this.classList.toggle('expanded')">
+          <div class="agent-card-header">
+            <span class="status-dot online"></span>
+            <span class="agent-card-title">Coding Agent</span>
+            <span class="agent-card-model">mimo-v2.5-pro</span>
+            <span class="badge badge-success">online</span>
+            <svg class="agent-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="agent-card-body" onclick="event.stopPropagation()">
+            <div style="margin-bottom:var(--space-4);">
+              <span style="font-size:12px; color:var(--muted); font-weight:600;">TOOLS</span>
+              <div class="tools-list" style="margin-top:var(--space-2);">
+                <span class="tool-tag">review_code</span>
+                <span class="tool-tag">explain_error</span>
+                <span class="tool-tag">suggest_fix</span>
+                <span class="tool-tag">write_test</span>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <span class="settings-label">Model</span>
+              <select class="select" style="width:100%;">
+                <option selected>mimo-v2.5-pro</option>
+                <option>mimo-v2.5-flash</option>
+                <option>gpt-4o</option>
+              </select>
+              <span class="settings-label">Temperature</span>
+              <div class="slider-wrap">
+                <input type="range" class="slider" min="0" max="1" step="0.1" value="0.2" oninput="this.nextElementSibling.textContent=this.value">
+                <span class="slider-val">0.2</span>
+              </div>
+              <span class="settings-label">Max tokens</span>
+              <input class="input input-mono" type="number" value="8192" style="width:120px;">
+              <span class="settings-label">Enabled</span>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="settings-actions">
+              <button class="btn btn-secondary btn-sm">Test Agent</button>
+              <button class="btn btn-ghost btn-sm">View Logs</button>
+              <button class="btn btn-danger btn-sm">Restart</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BA Agent -->
+        <div class="agent-card" onclick="this.classList.toggle('expanded')">
+          <div class="agent-card-header">
+            <span class="status-dot online"></span>
+            <span class="agent-card-title">BA Agent</span>
+            <span class="agent-card-model">mimo-v2.5-pro</span>
+            <span class="badge badge-success">online</span>
+            <svg class="agent-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="agent-card-body" onclick="event.stopPropagation()">
+            <div style="margin-bottom:var(--space-4);">
+              <span style="font-size:12px; color:var(--muted); font-weight:600;">TOOLS</span>
+              <div class="tools-list" style="margin-top:var(--space-2);">
+                <span class="tool-tag">analyze_requirements</span>
+                <span class="tool-tag">write_user_story</span>
+                <span class="tool-tag">gap_analysis</span>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <span class="settings-label">Model</span>
+              <select class="select" style="width:100%;">
+                <option selected>mimo-v2.5-pro</option>
+                <option>mimo-v2.5-flash</option>
+              </select>
+              <span class="settings-label">Temperature</span>
+              <div class="slider-wrap">
+                <input type="range" class="slider" min="0" max="1" step="0.1" value="0.4" oninput="this.nextElementSibling.textContent=this.value">
+                <span class="slider-val">0.4</span>
+              </div>
+              <span class="settings-label">Max tokens</span>
+              <input class="input input-mono" type="number" value="4096" style="width:120px;">
+              <span class="settings-label">Enabled</span>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="settings-actions">
+              <button class="btn btn-secondary btn-sm">Test Agent</button>
+              <button class="btn btn-ghost btn-sm">View Logs</button>
+              <button class="btn btn-danger btn-sm">Restart</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- UIUX Agent -->
+        <div class="agent-card" onclick="this.classList.toggle('expanded')">
+          <div class="agent-card-header">
+            <span class="status-dot online"></span>
+            <span class="agent-card-title">UIUX Agent</span>
+            <span class="agent-card-model">mimo-v2.5-pro</span>
+            <span class="badge badge-success">online</span>
+            <svg class="agent-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="agent-card-body" onclick="event.stopPropagation()">
+            <div style="margin-bottom:var(--space-4);">
+              <span style="font-size:12px; color:var(--muted); font-weight:600;">TOOLS</span>
+              <div class="tools-list" style="margin-top:var(--space-2);">
+                <span class="tool-tag">design_component</span>
+                <span class="tool-tag">create_wireframe</span>
+                <span class="tool-tag">review_accessibility</span>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <span class="settings-label">Model</span>
+              <select class="select" style="width:100%;">
+                <option selected>mimo-v2.5-pro</option>
+                <option>mimo-v2.5-flash</option>
+              </select>
+              <span class="settings-label">Temperature</span>
+              <div class="slider-wrap">
+                <input type="range" class="slider" min="0" max="1" step="0.1" value="0.3" oninput="this.nextElementSibling.textContent=this.value">
+                <span class="slider-val">0.3</span>
+              </div>
+              <span class="settings-label">Max tokens</span>
+              <input class="input input-mono" type="number" value="4096" style="width:120px;">
+              <span class="settings-label">Enabled</span>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="settings-actions">
+              <button class="btn btn-secondary btn-sm">Test Agent</button>
+              <button class="btn btn-ghost btn-sm">View Logs</button>
+              <button class="btn btn-danger btn-sm">Restart</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tester Agent -->
+        <div class="agent-card" onclick="this.classList.toggle('expanded')">
+          <div class="agent-card-header">
+            <span class="status-dot offline"></span>
+            <span class="agent-card-title">Tester Agent</span>
+            <span class="agent-card-model">mimo-v2.5-pro</span>
+            <span class="badge badge-muted">offline</span>
+            <svg class="agent-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="agent-card-body" onclick="event.stopPropagation()">
+            <div style="margin-bottom:var(--space-4);">
+              <span style="font-size:12px; color:var(--muted); font-weight:600;">TOOLS</span>
+              <div class="tools-list" style="margin-top:var(--space-2);">
+                <span class="tool-tag">run_tests</span>
+                <span class="tool-tag">coverage_report</span>
+                <span class="tool-tag">challenge_code</span>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <span class="settings-label">Model</span>
+              <select class="select" style="width:100%;">
+                <option selected>mimo-v2.5-pro</option>
+                <option>mimo-v2.5-flash</option>
+              </select>
+              <span class="settings-label">Temperature</span>
+              <div class="slider-wrap">
+                <input type="range" class="slider" min="0" max="1" step="0.1" value="0.1" oninput="this.nextElementSibling.textContent=this.value">
+                <span class="slider-val">0.1</span>
+              </div>
+              <span class="settings-label">Max tokens</span>
+              <input class="input input-mono" type="number" value="8192" style="width:120px;">
+              <span class="settings-label">Enabled</span>
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="settings-actions">
+              <button class="btn btn-secondary btn-sm">Test Agent</button>
+              <button class="btn btn-ghost btn-sm">View Logs</button>
+              <button class="btn btn-primary btn-sm">Start</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- DevOps Agent -->
+        <div class="agent-card" onclick="this.classList.toggle('expanded')">
+          <div class="agent-card-header">
+            <span class="status-dot online"></span>
+            <span class="agent-card-title">DevOps Agent</span>
+            <span class="agent-card-model">mimo-v2.5-pro</span>
+            <span class="badge badge-success">online</span>
+            <svg class="agent-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="agent-card-body" onclick="event.stopPropagation()">
+            <div style="margin-bottom:var(--space-4);">
+              <span style="font-size:12px; color:var(--muted); font-weight:600;">TOOLS</span>
+              <div class="tools-list" style="margin-top:var(--space-2);">
+                <span class="tool-tag">deploy</span>
+                <span class="tool-tag">rollback</span>
+                <span class="tool-tag">health_check</span>
+                <span class="tool-tag">scale_service</span>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <span class="settings-label">Model</span>
+              <select class="select" style="width:100%;">
+                <option selected>mimo-v2.5-pro</option>
+                <option>mimo-v2.5-flash</option>
+              </select>
+              <span class="settings-label">Temperature</span>
+              <div class="slider-wrap">
+                <input type="range" class="slider" min="0" max="1" step="0.1" value="0.1" oninput="this.nextElementSibling.textContent=this.value">
+                <span class="slider-val">0.1</span>
+              </div>
+              <span class="settings-label">Max tokens</span>
+              <input class="input input-mono" type="number" value="4096" style="width:120px;">
+              <span class="settings-label">Enabled</span>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="settings-actions">
+              <button class="btn btn-secondary btn-sm">Test Agent</button>
+              <button class="btn btn-ghost btn-sm">View Logs</button>
+              <button class="btn btn-danger btn-sm">Restart</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TechLead Agent -->
+        <div class="agent-card" onclick="this.classList.toggle('expanded')">
+          <div class="agent-card-header">
+            <span class="status-dot online"></span>
+            <span class="agent-card-title">TechLead Agent</span>
+            <span class="agent-card-model">mimo-v2.5-pro</span>
+            <span class="badge badge-success">online</span>
+            <svg class="agent-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="agent-card-body" onclick="event.stopPropagation()">
+            <div style="margin-bottom:var(--space-4);">
+              <span style="font-size:12px; color:var(--muted); font-weight:600;">TOOLS</span>
+              <div class="tools-list" style="margin-top:var(--space-2);">
+                <span class="tool-tag">decompose_task</span>
+                <span class="tool-tag">assign_agents</span>
+                <span class="tool-tag">arbitrate</span>
+                <span class="tool-tag">approve_merge</span>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <span class="settings-label">Model</span>
+              <select class="select" style="width:100%;">
+                <option selected>mimo-v2.5-pro</option>
+                <option>mimo-v2.5-flash</option>
+              </select>
+              <span class="settings-label">Temperature</span>
+              <div class="slider-wrap">
+                <input type="range" class="slider" min="0" max="1" step="0.1" value="0.3" oninput="this.nextElementSibling.textContent=this.value">
+                <span class="slider-val">0.3</span>
+              </div>
+              <span class="settings-label">Max tokens</span>
+              <input class="input input-mono" type="number" value="8192" style="width:120px;">
+              <span class="settings-label">Enabled</span>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="settings-actions">
+              <button class="btn btn-secondary btn-sm">Test Agent</button>
+              <button class="btn btn-ghost btn-sm">View Logs</button>
+              <button class="btn btn-danger btn-sm">Restart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Config ═══ -->
+    <div id="page-config" class="page">
+      <div class="page-header">
+        <h1 class="page-title">Configuration</h1>
+        <p class="page-subtitle">API keys, MCP servers, and agent-to-agent connections</p>
+      </div>
+
+      <!-- API Keys -->
+      <div class="card" style="margin-bottom: var(--space-6);">
+        <div class="card-header">
+          <span class="card-title">API Keys</span>
+        </div>
+        <div class="field">
+          <label class="field-label">MiMo API Key</label>
+          <div class="field-row">
+            <input class="input input-mono" type="password" value="sk-xxxxxxxxxxxxxxxxxxxx" id="mimo-key">
+            <button class="btn btn-secondary btn-sm" onclick="togglePassword('mimo-key')">Show</button>
+            <button class="btn btn-secondary btn-sm">Test</button>
+            <button class="btn btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">MiMo Base URL</label>
+          <div class="field-row">
+            <input class="input input-mono" type="text" value="https://api.xiaomi.com/v1">
+            <button class="btn btn-secondary btn-sm">Test</button>
+            <button class="btn btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">MiMo Model</label>
+          <div class="field-row">
+            <input class="input input-mono" type="text" value="mimo-v2.5-pro">
+            <button class="btn btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">GitHub Token</label>
+          <div class="field-row">
+            <input class="input input-mono" type="password" value="ghp_xxxxxxxxxxxxxxxx" id="gh-token">
+            <button class="btn btn-secondary btn-sm" onclick="togglePassword('gh-token')">Show</button>
+            <button class="btn btn-secondary btn-sm">Test</button>
+            <button class="btn btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">OpenDesign URL</label>
+          <div class="field-row">
+            <input class="input input-mono" type="text" value="http://127.0.0.1:63420">
+            <button class="btn btn-secondary btn-sm">Test</button>
+            <button class="btn btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MCP Servers -->
+      <div class="card" style="margin-bottom: var(--space-6);">
+        <div class="card-header">
+          <span class="card-title">MCP Servers</span>
+          <button class="btn btn-secondary btn-sm">+ Add MCP Server</button>
+        </div>
+        <div class="conn-row">
+          <span class="conn-name">GitHub MCP</span>
+          <span class="conn-url">https://api.github.com/mcp</span>
+          <span class="status-dot online"></span>
+          <span class="badge badge-success">connected</span>
+        </div>
+        <div class="conn-row">
+          <span class="conn-name">Context7</span>
+          <span class="conn-url">https://mcp.context7.dev</span>
+          <span class="status-dot online"></span>
+          <span class="badge badge-success">connected</span>
+        </div>
+        <div class="conn-row">
+          <span class="conn-name">Open-Design</span>
+          <span class="conn-url" style="color:var(--muted); font-style:italic;">not configured</span>
+          <span class="status-dot offline"></span>
+          <span class="badge badge-muted">disconnected</span>
+        </div>
+        <div class="conn-row">
+          <span class="conn-name">Linear</span>
+          <span class="conn-url" style="color:var(--muted); font-style:italic;">not configured</span>
+          <span class="status-dot offline"></span>
+          <span class="badge badge-muted">disconnected</span>
+        </div>
+      </div>
+
+      <!-- A2A Connections -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">A2A Connections</span>
+          <span style="font-size:12px; color:var(--muted);">Auto-discovered via /.well-known/agent.json</span>
+        </div>
+        <div class="conn-row">
+          <span class="conn-name">Coding ↔ Tester</span>
+          <span class="conn-url">bidirectional</span>
+          <span class="status-dot online"></span>
+          <span class="badge badge-success">active</span>
+        </div>
+        <div class="conn-row">
+          <span class="conn-name">BA ↔ UIUX</span>
+          <span class="conn-url">bidirectional</span>
+          <span class="status-dot online"></span>
+          <span class="badge badge-success">active</span>
+        </div>
+        <div class="conn-row">
+          <span class="conn-name">Coding ↔ TechLead</span>
+          <span class="conn-url">bidirectional</span>
+          <span class="status-dot online"></span>
+          <span class="badge badge-success">active</span>
+        </div>
+        <div class="conn-row">
+          <span class="conn-name">DevOps ↔ TechLead</span>
+          <span class="conn-url">bidirectional</span>
+          <span class="status-dot online"></span>
+          <span class="badge badge-success">active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Logs ═══ -->
+    <div id="page-logs" class="page">
+      <div class="page-header">
+        <h1 class="page-title">Logs</h1>
+        <p class="page-subtitle">Real-time agent activity stream</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="card" style="margin-bottom: var(--space-4);">
+        <div style="display:flex; gap:var(--space-3); align-items:center; flex-wrap:wrap;">
+          <select class="select" id="log-filter-agent" onchange="filterLogs()">
+            <option value="all">All Agents</option>
+            <option value="coding">Coding</option>
+            <option value="ba">BA</option>
+            <option value="uiux">UIUX</option>
+            <option value="tester">Tester</option>
+            <option value="devops">DevOps</option>
+            <option value="techlead">TechLead</option>
+          </select>
+          <select class="select" id="log-filter-level" onchange="filterLogs()">
+            <option value="all">All Levels</option>
+            <option value="info">INFO</option>
+            <option value="warn">WARN</option>
+            <option value="error">ERROR</option>
+            <option value="debug">DEBUG</option>
+          </select>
+          <input class="input" type="text" placeholder="Search logs..." id="log-search" oninput="filterLogs()" style="max-width:300px;">
+          <div style="flex:1;"></div>
+          <button class="btn btn-ghost btn-sm" onclick="clearLogs()">Clear</button>
+          <button class="btn btn-secondary btn-sm" id="log-autoscroll-btn" onclick="toggleAutoScroll()">
+            <span class="status-dot online" style="width:6px;height:6px;"></span> Auto-scroll
+          </button>
+        </div>
+      </div>
+
+      <!-- Log Stream -->
+      <div class="log-viewer" id="log-viewer">
+        <div class="log-row" data-agent="techlead" data-level="info">
+          <span class="log-time">14:08:20</span>
+          <span class="log-agent">techlead</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Task #002 assigned to Coding + Tester agents</span>
+        </div>
+        <div class="log-row" data-agent="coding" data-level="info">
+          <span class="log-time">14:08:21</span>
+          <span class="log-agent">coding</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Starting code review for PR #42</span>
+        </div>
+        <div class="log-row" data-agent="coding" data-level="info">
+          <span class="log-time">14:08:22</span>
+          <span class="log-agent">coding</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Cloning repository openhand/core</span>
+        </div>
+        <div class="log-row" data-agent="coding" data-level="info">
+          <span class="log-time">14:08:23</span>
+          <span class="log-agent">coding</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Reviewing file src/auth.ts (142 lines changed)</span>
+        </div>
+        <div class="log-row" data-agent="coding" data-level="warn">
+          <span class="log-time">14:08:24</span>
+          <span class="log-agent">coding</span>
+          <span class="log-level warn">WARN</span>
+          <span class="log-msg">Found: SQL injection vulnerability at line 42</span>
+        </div>
+        <div class="log-row" data-agent="tester" data-level="info">
+          <span class="log-time">14:08:25</span>
+          <span class="log-agent">tester</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Running coverage analysis on auth module</span>
+        </div>
+        <div class="log-row" data-agent="techlead" data-level="info">
+          <span class="log-time">14:08:26</span>
+          <span class="log-agent">techlead</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Arbitrating: coding vs ba on requirement interpretation</span>
+        </div>
+        <div class="log-row" data-agent="coding" data-level="info">
+          <span class="log-time">14:08:27</span>
+          <span class="log-agent">coding</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Fix applied: sanitize() wrapper on user input</span>
+        </div>
+        <div class="log-row" data-agent="tester" data-level="warn">
+          <span class="log-time">14:08:28</span>
+          <span class="log-agent">tester</span>
+          <span class="log-level warn">WARN</span>
+          <span class="log-msg">Coverage at 78%, target is 80% — CHALLENGE issued</span>
+        </div>
+        <div class="log-row" data-agent="coding" data-level="info">
+          <span class="log-time">14:08:29</span>
+          <span class="log-agent">coding</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Challenge accepted: adding test for edge case input</span>
+        </div>
+        <div class="log-row" data-agent="devops" data-level="info">
+          <span class="log-time">14:08:30</span>
+          <span class="log-agent">devops</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">CI pipeline triggered for PR #42</span>
+        </div>
+        <div class="log-row" data-agent="ba" data-level="debug">
+          <span class="log-time">14:08:31</span>
+          <span class="log-agent">ba</span>
+          <span class="log-level debug">DEBUG</span>
+          <span class="log-msg">Requirement trace: auth-flow spec v2.1 loaded</span>
+        </div>
+        <div class="log-row" data-agent="uiux" data-level="info">
+          <span class="log-time">14:08:32</span>
+          <span class="log-agent">uiux</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Reviewing login form accessibility (WCAG 2.1 AA)</span>
+        </div>
+        <div class="log-row" data-agent="coding" data-level="info">
+          <span class="log-time">14:08:33</span>
+          <span class="log-agent">coding</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Test written: test_sql_injection_prevention (3 assertions)</span>
+        </div>
+        <div class="log-row" data-agent="tester" data-level="info">
+          <span class="log-time">14:08:34</span>
+          <span class="log-agent">tester</span>
+          <span class="log-level info">INFO</span>
+          <span class="log-msg">Re-running coverage... now 82% — threshold met</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ─── Footer ─────────────────────────────────────────── -->
+  <footer class="footer">
+    <span>OpenHand v1.0</span>
+    <span>Uptime: 3d 12h</span>
+    <span>Tokens: 1.2M used</span>
+  </footer>
+</div>
+
+<script>
+// ─── Navigation ───────────────────────────────────────────────
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-link').forEach(function(l) { l.classList.remove('active'); });
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector('[data-page="' + page + '"]').classList.add('active');
+}
+
+// ─── Task Filter ──────────────────────────────────────────────
+function filterTasks(status, btn) {
+  document.querySelectorAll('.task-filter').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelectorAll('#task-list .task-card').forEach(function(card) {
+    if (status === 'all' || card.dataset.status === status) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// ─── Submit Task ──────────────────────────────────────────────
+function submitTask() {
+  var input = document.getElementById('new-task-input');
+  var text = input.value.trim();
+  if (!text) return;
+  var list = document.getElementById('task-list');
+  var card = document.createElement('div');
+  card.className = 'task-card';
+  card.dataset.status = 'pending';
+  card.setAttribute('onclick', "this.classList.toggle('expanded')");
+  var id = String(list.children.length + 1).padStart(3, '0');
+  card.innerHTML = '<div class="task-header">' +
+    '<span class="task-id">#' + id + '</span>' +
+    '<span class="task-title">' + escapeHtml(text) + '</span>' +
+    '<span class="badge badge-info">pending</span>' +
+    '<span class="task-meta">just now</span>' +
+    '<svg class="task-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+    '</div>' +
+    '<div class="task-body"><div style="font-size:13px;color:var(--muted);">Waiting for TechLead to decompose and assign agents.</div></div>';
+  list.prepend(card);
+  input.value = '';
+}
+
+function escapeHtml(text) {
+  var d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+// ─── Password Toggle ──────────────────────────────────────────
+function togglePassword(id) {
+  var el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+// ─── Log Filtering ────────────────────────────────────────────
+var autoScroll = true;
+
+function filterLogs() {
+  var agent = document.getElementById('log-filter-agent').value;
+  var level = document.getElementById('log-filter-level').value;
+  var search = document.getElementById('log-search').value.toLowerCase();
+  document.querySelectorAll('#log-viewer .log-row').forEach(function(row) {
+    var matchAgent = agent === 'all' || row.dataset.agent === agent;
+    var matchLevel = level === 'all' || row.dataset.level === level;
+    var matchSearch = !search || row.textContent.toLowerCase().indexOf(search) !== -1;
+    row.style.display = (matchAgent && matchLevel && matchSearch) ? '' : 'none';
+  });
+}
+
+function clearLogs() {
+  document.getElementById('log-viewer').innerHTML = '';
+}
+
+function toggleAutoScroll() {
+  autoScroll = !autoScroll;
+  var btn = document.getElementById('log-autoscroll-btn');
+  btn.innerHTML = autoScroll
+    ? '<span class="status-dot online" style="width:6px;height:6px;"></span> Auto-scroll'
+    : '<span class="status-dot offline" style="width:6px;height:6px;"></span> Auto-scroll';
+}
+
+// ─── Token Chart (SVG) ────────────────────────────────────────
+function renderChart() {
+  var container = document.getElementById('token-chart');
+  if (!container) return;
+  var data = [
+    { day: 'Mon', coding: 8200, ba: 2100, uiux: 800, devops: 600, techlead: 3800 },
+    { day: 'Tue', coding: 6500, ba: 1800, uiux: 1200, devops: 450, techlead: 4200 },
+    { day: 'Wed', coding: 9100, ba: 2800, uiux: 900, devops: 700, techlead: 5100 },
+    { day: 'Thu', coding: 7400, ba: 1500, uiux: 1100, devops: 550, techlead: 3600 },
+    { day: 'Fri', coding: 10200, ba: 3200, uiux: 1050, devops: 890, techlead: 5600 },
+    { day: 'Sat', coding: 4100, ba: 900, uiux: 400, devops: 300, techlead: 2000 },
+    { day: 'Sun', coding: 5800, ba: 1400, uiux: 700, devops: 420, techlead: 2800 },
+  ];
+  var cs = getComputedStyle(document.documentElement);
+  var agents = ['coding', 'ba', 'uiux', 'devops', 'techlead'];
+  var colors = [cs.getPropertyValue('--primary').trim(), cs.getPropertyValue('--success').trim(), cs.getPropertyValue('--warning').trim(), cs.getPropertyValue('--muted').trim(), cs.getPropertyValue('--danger').trim()];
+  var maxVal = Math.max.apply(null, data.map(function(d) { return agents.reduce(function(s, a) { return s + d[a]; }, 0); }));
+  var barW = 32;
+  var gap = 16;
+  var chartH = 140;
+  var offsetY = 20;
+  var totalW = data.length * (barW + gap) - gap;
+  var startX = 40;
+
+  var svg = '<svg viewBox="0 0 ' + (startX + totalW + 10) + ' ' + (chartH + offsetY + 20) + '">';
+
+  for (var i = 0; i <= 4; i++) {
+    var y = offsetY + (chartH / 4) * i;
+    svg += '<line x1="' + startX + '" y1="' + y + '" x2="' + (startX + totalW) + '" y2="' + y + '" stroke="' + cs.getPropertyValue('--border').trim() + '" stroke-width="0.5" stroke-dasharray="4,4"/>';
+  }
+
+  data.forEach(function(d, i) {
+    var x = startX + i * (barW + gap);
+    var cumH = 0;
+    agents.forEach(function(a, ai) {
+      var h = (d[a] / maxVal) * chartH;
+      var yy = offsetY + chartH - cumH - h;
+      svg += '<rect class="chart-bar" x="' + x + '" y="' + yy + '" width="' + barW + '" height="' + h + '" rx="2" fill="' + colors[ai] + '" opacity="0.85"/>';
+      cumH += h;
+    });
+    svg += '<text class="chart-label" x="' + (x + barW / 2) + '" y="' + (chartH + offsetY + 14) + '" text-anchor="middle">' + d.day + '</text>';
+  });
+
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+renderChart();
+
+// ─── Simulated live log stream ────────────────────────────────
+var liveLogMessages = [
+  { agent: 'coding', level: 'info', msg: 'Compiling TypeScript module auth/service.ts' },
+  { agent: 'tester', level: 'info', msg: 'Running integration test: login_flow.test.ts' },
+  { agent: 'devops', level: 'info', msg: 'Docker build triggered for openhand/api' },
+  { agent: 'techlead', level: 'info', msg: 'Reviewing merge readiness for PR #42' },
+  { agent: 'ba', level: 'debug', msg: 'Parsing user story acceptance criteria' },
+  { agent: 'uiux', level: 'info', msg: 'Checking color contrast ratio on form labels' },
+  { agent: 'coding', level: 'warn', msg: 'Unused import detected in auth/middleware.ts' },
+  { agent: 'tester', level: 'info', msg: 'All 24 tests passing, coverage at 83%' },
+  { agent: 'devops', level: 'warn', msg: 'Container memory usage at 78% of limit' },
+  { agent: 'techlead', level: 'info', msg: 'Approving PR #42 for merge' },
+];
+
+var logIndex = 0;
+setInterval(function() {
+  var viewer = document.getElementById('log-viewer');
+  if (!viewer) return;
+  var entry = liveLogMessages[logIndex % liveLogMessages.length];
+  var now = new Date();
+  var time = now.toTimeString().slice(0, 8);
+  var row = document.createElement('div');
+  row.className = 'log-row';
+  row.dataset.agent = entry.agent;
+  row.dataset.level = entry.level;
+  row.innerHTML = '<span class="log-time">' + time + '</span>' +
+    '<span class="log-agent">' + entry.agent + '</span>' +
+    '<span class="log-level ' + entry.level + '">' + entry.level.toUpperCase() + '</span>' +
+    '<span class="log-msg">' + entry.msg + '</span>';
+
+  var agentFilter = document.getElementById('log-filter-agent').value;
+  var levelFilter = document.getElementById('log-filter-level').value;
+  var search = document.getElementById('log-search').value.toLowerCase();
+  var matchAgent = agentFilter === 'all' || entry.agent === agentFilter;
+  var matchLevel = levelFilter === 'all' || entry.level === levelFilter;
+  var matchSearch = !search || entry.msg.toLowerCase().indexOf(search) !== -1;
+  if (!matchAgent || !matchLevel || !matchSearch) row.style.display = 'none';
+
+  viewer.appendChild(row);
+  if (autoScroll) viewer.scrollTop = viewer.scrollHeight;
+  logIndex++;
+}, 3000);
+
+// ─── Hash routing ─────────────────────────────────────────────
+function handleHash() {
+  var hash = location.hash.replace('#/', '').replace('#', '') || 'dashboard';
+  var valid = ['dashboard', 'tasks', 'agents', 'config', 'logs'];
+  navigate(valid.indexOf(hash) !== -1 ? hash : 'dashboard');
+}
+window.addEventListener('hashchange', handleHash);
+handleHash();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output (user tự generate)
+output/
+.build_progress.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (web UI)
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Docker
+*.log
+
+# Virtual env
+venv/
+.venv/
+env/
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# Misc
+*.bak
+*.tmp
