@@ -34,8 +34,8 @@ from shared.mcp_client import MCPClient
 from shared.task_queue import TaskQueue
 
 # Local modules
-from .prompts import SYSTEM_PROMPT
-from .tools import get_tools
+from prompts import SYSTEM_PROMPT
+from tools import get_tools
 
 # ---------------------------------------------------------------------------
 # Configuration

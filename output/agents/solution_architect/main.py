@@ -35,8 +35,8 @@ from shared.task_queue import TaskQueue
 # ---------------------------------------------------------------------------
 # Local modules
 # ---------------------------------------------------------------------------
-from .prompts import SYSTEM_PROMPT
-from .tools import get_tools
+from prompts import SYSTEM_PROMPT
+from tools import get_tools
 
 # ---------------------------------------------------------------------------
 # Structured logging

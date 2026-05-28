@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ==========================================================================
 # OpenCrew — Docker Compose
 # 11 Agent Services + Redis + Web UI

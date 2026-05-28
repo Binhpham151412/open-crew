@@ -17,8 +17,8 @@ from shared.a2a_server import A2AServer, A2AMessage
 from shared.mcp_client import MCPClient
 from shared.task_queue import TaskQueue
 
-from .prompts import SYSTEM_PROMPT
-from .tools import get_tools
+from prompts import SYSTEM_PROMPT
+from tools import get_tools
 
 # ---------------------------------------------------------------------------
 # Structured logging

@@ -17,8 +17,8 @@ from shared.a2a_server import A2AServer, A2AMessage, Payload
 from shared.mcp_client import MCPClient
 from shared.task_queue import TaskQueue
 
-from .prompts import SYSTEM_PROMPT
-from .tools import get_tools
+from prompts import SYSTEM_PROMPT
+from tools import get_tools
 
 # ---------------------------------------------------------------------------
 # Structured logger
@@ -91,7 +91,7 @@ async def _call_llm(messages: list[dict[str, str]]) -> str:
     """Call the LLM via MCP tool (chat_completion) with the system prompt and
     conversation history.  Returns the raw assistant text."""
 
-    from .tools import chat_completion
+    from tools import chat_completion
 
     system_msg = {"role": "system", "content": SYSTEM_PROMPT}
     full_messages = [system_msg, *messages]
