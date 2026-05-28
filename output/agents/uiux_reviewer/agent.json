@@ -1,0 +1,86 @@
+{
+  "name": "uiux_reviewer",
+  "display_name": "UIUX Reviewer",
+  "url": "http://uiux_reviewer:8006",
+  "version": "1.0.0",
+  "description": "Reviews frontend UI code for accessibility compliance (WCAG 2.1 AA), UX validation, spacing/typography/color contrast adherence, and design spec compliance.",
+  "capabilities": [
+    "accessibility_review",
+    "ux_validation",
+    "design_compliance"
+  ],
+  "input_types": [
+    "frontend_code",
+    "ui_spec"
+  ],
+  "output_types": [
+    "review_report"
+  ],
+  "protocol": "a2a/1.0",
+  "port": 8006,
+  "tier": 3,
+  "layer": "Quality & Review",
+  "mcp_tools": {
+    "github_mcp": {
+      "access": "write",
+      "description": "View code, comment on PRs"
+    },
+    "opendesign_mcp": {
+      "access": "read",
+      "description": "Compare with design spec"
+    }
+  },
+  "push_to": {
+    "on_violation": "frontend_dev",
+    "on_pass": "qa"
+  },
+  "a2a_config": {
+    "message_types": [
+      "task",
+      "challenge",
+      "response",
+      "final_position",
+      "escalate"
+    ],
+    "debate_priority": "accessibility_issue",
+    "max_debate_rounds": 3,
+    "escalate_to": "techlead"
+  },
+  "health_endpoint": "/health",
+  "agent_card_endpoint": "/.well-known/agent.json",
+  "a2a_endpoint": "/a2a",
+  "classification_levels": {
+    "violation": "Must fix — blocks merge (e.g., accessibility failure, broken layout)",
+    "suggestion": "Should fix this sprint (e.g., UX improvement)",
+    "opinion": "Nice to have — backlog (e.g., aesthetic preference)"
+  },
+  "review_criteria": {
+    "wcag_version": "2.1",
+    "conformance_level": "AA",
+    "color_contrast_min_ratio": 4.5,
+    "min_touch_target_px": 44,
+    "checks": [
+      "wcag_accessibility",
+      "color_contrast",
+      "touch_targets",
+      "focus_states",
+      "keyboard_navigation",
+      "responsive_breakpoints",
+      "loading_states",
+      "empty_states",
+      "error_states",
+      "spacing_consistency",
+      "typography_consistency",
+      "design_spec_alignment"
+    ]
+  },
+  "tags": [
+    "reviewer",
+    "accessibility",
+    "ux",
+    "frontend",
+    "quality"
+  ],
+  "created_at": "2026-05-27T00:00:00Z",
+  "updated_at": "2026-05-27T00:00:00Z"
+}

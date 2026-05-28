@@ -1,0 +1,92 @@
+# OpenCrew - Gitignore
+# Generated for the OpenCrew multi-agent system
+
+# === Build output ===
+output/
+.build_progress.json
+dist/
+build/
+*.egg-info/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.whl
+.Python
+develop-eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# === Node.js / Next.js ===
+node_modules/
+.next/
+.nuxt/
+out/
+.turbo/
+
+# === Environment & Secrets ===
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+*.cert
+
+# === Docker ===
+.docker/
+docker-compose.override.yml
+
+# === IDE & Editor ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === Testing & Coverage ===
+.coverage
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage.xml
+*.cover
+*.py,cover
+
+# === Logs ===
+*.log
+logs/
+
+# === Misc ===
+*.bak
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+.serverless/
+.vercel/

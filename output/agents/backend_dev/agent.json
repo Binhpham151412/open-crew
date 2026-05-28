@@ -1,0 +1,21 @@
+{
+  "name": "backend_dev",
+  "display_name": "Backend Developer",
+  "url": "http://backend_dev:8005",
+  "version": "1.0.0",
+  "capabilities": [
+    "fastapi",
+    "sqlalchemy",
+    "pydantic",
+    "api_implementation"
+  ],
+  "input_types": [
+    "api_spec",
+    "db_schema",
+    "user_story"
+  ],
+  "output_types": [
+    "fastapi_code"
+  ],
+  "protocol": "a2a/1.0"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "security_reviewer",
+  "display_name": "Security Reviewer",
+  "url": "http://security_reviewer:8007",
+  "version": "1.0.0",
+  "capabilities": [
+    "owasp_top10",
+    "secret_scan",
+    "cve_check"
+  ],
+  "input_types": [
+    "source_code"
+  ],
+  "output_types": [
+    "security_report"
+  ],
+  "protocol": "a2a/1.0"
+}

@@ -13,8 +13,7 @@ build/
 .env.local
 .env.*.local
 
-# Build output (user tự generate)
-output/
+# Build progress (internal)
 .build_progress.json
 
 # IDE

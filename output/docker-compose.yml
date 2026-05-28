@@ -1,0 +1,402 @@
+version: "3.9"
+
+# ==========================================================================
+# OpenCrew — Docker Compose
+# 11 Agent Services + Redis + Web UI
+# ==========================================================================
+
+x-common-env: &common-env
+  REDIS_URL: redis://redis:6379/0
+  A2A_BASE_URL: http://localhost
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+x-agent-defaults: &agent-defaults
+  restart: unless-stopped
+  networks:
+    - opencrew-net
+  depends_on:
+    redis:
+      condition: service_healthy
+  deploy:
+    resources:
+      limits:
+        cpus: "0.50"
+        memory: 512M
+      reservations:
+        cpus: "0.25"
+        memory: 256M
+
+services:
+  # --------------------------------------------------------------------------
+  # Redis — Task queue + Agent registry
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: opencrew-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - opencrew-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+  # --------------------------------------------------------------------------
+  # Agent: PO — Product Owner (port 8000)
+  # --------------------------------------------------------------------------
+  po:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/po/Dockerfile
+    container_name: opencrew-po
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *common-env
+      AGENT_NAME: po
+      AGENT_PORT: "8000"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: PM — Project Manager (port 8001)
+  # --------------------------------------------------------------------------
+  pm:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/pm/Dockerfile
+    container_name: opencrew-pm
+    ports:
+      - "8001:8001"
+    environment:
+      <<: *common-env
+      AGENT_NAME: pm
+      AGENT_PORT: "8001"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: BA — Business Analyst (port 8002)
+  # --------------------------------------------------------------------------
+  ba:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/ba/Dockerfile
+    container_name: opencrew-ba
+    ports:
+      - "8002:8002"
+    environment:
+      <<: *common-env
+      AGENT_NAME: ba
+      AGENT_PORT: "8002"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: Solution Architect (port 8003)
+  # --------------------------------------------------------------------------
+  solution_architect:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/solution_architect/Dockerfile
+    container_name: opencrew-solution-architect
+    ports:
+      - "8003:8003"
+    environment:
+      <<: *common-env
+      AGENT_NAME: solution_architect
+      AGENT_PORT: "8003"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: Frontend Developer (port 8004)
+  # --------------------------------------------------------------------------
+  frontend_dev:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/frontend_dev/Dockerfile
+    container_name: opencrew-frontend-dev
+    ports:
+      - "8004:8004"
+    environment:
+      <<: *common-env
+      AGENT_NAME: frontend_dev
+      AGENT_PORT: "8004"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: Backend Developer (port 8005)
+  # --------------------------------------------------------------------------
+  backend_dev:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/backend_dev/Dockerfile
+    container_name: opencrew-backend-dev
+    ports:
+      - "8005:8005"
+    environment:
+      <<: *common-env
+      AGENT_NAME: backend_dev
+      AGENT_PORT: "8005"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: UIUX Reviewer (port 8006)
+  # --------------------------------------------------------------------------
+  uiux_reviewer:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/uiux_reviewer/Dockerfile
+    container_name: opencrew-uiux-reviewer
+    ports:
+      - "8006:8006"
+    environment:
+      <<: *common-env
+      AGENT_NAME: uiux_reviewer
+      AGENT_PORT: "8006"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: Security Reviewer (port 8007)
+  # --------------------------------------------------------------------------
+  security_reviewer:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/security_reviewer/Dockerfile
+    container_name: opencrew-security-reviewer
+    ports:
+      - "8007:8007"
+    environment:
+      <<: *common-env
+      AGENT_NAME: security_reviewer
+      AGENT_PORT: "8007"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: QA / Tester (port 8008)
+  # --------------------------------------------------------------------------
+  qa:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/qa/Dockerfile
+    container_name: opencrew-qa
+    ports:
+      - "8008:8008"
+    environment:
+      <<: *common-env
+      AGENT_NAME: qa
+      AGENT_PORT: "8008"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: DevOps / SRE (port 8009)
+  # --------------------------------------------------------------------------
+  devops:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/devops/Dockerfile
+    container_name: opencrew-devops
+    ports:
+      - "8009:8009"
+    environment:
+      <<: *common-env
+      AGENT_NAME: devops
+      AGENT_PORT: "8009"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Agent: TechLead (port 8010)
+  # --------------------------------------------------------------------------
+  techlead:
+    <<: *agent-defaults
+    build:
+      context: .
+      dockerfile: agents/techlead/Dockerfile
+    container_name: opencrew-techlead
+    ports:
+      - "8010:8010"
+    environment:
+      <<: *common-env
+      AGENT_NAME: techlead
+      AGENT_PORT: "8010"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Web UI — NextJS 14 Admin Panel (port 3000)
+  # --------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    container_name: opencrew-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      <<: *common-env
+      NEXT_PUBLIC_API_URL: http://web:3000/api
+      PO_URL: http://po:8000
+      PM_URL: http://pm:8001
+      BA_URL: http://ba:8002
+      SA_URL: http://solution_architect:8003
+      FRONTEND_DEV_URL: http://frontend_dev:8004
+      BACKEND_DEV_URL: http://backend_dev:8005
+      UIUX_REVIEWER_URL: http://uiux_reviewer:8006
+      SECURITY_REVIEWER_URL: http://security_reviewer:8007
+      QA_URL: http://qa:8008
+      DEVOPS_URL: http://devops:8009
+      TECHLEAD_URL: http://techlead:8010
+    env_file:
+      - .env
+    networks:
+      - opencrew-net
+    depends_on:
+      redis:
+        condition: service_healthy
+      po:
+        condition: service_healthy
+      pm:
+        condition: service_healthy
+      ba:
+        condition: service_healthy
+      solution_architect:
+        condition: service_healthy
+      frontend_dev:
+        condition: service_healthy
+      backend_dev:
+        condition: service_healthy
+      uiux_reviewer:
+        condition: service_healthy
+      security_reviewer:
+        condition: service_healthy
+      qa:
+        condition: service_healthy
+      devops:
+        condition: service_healthy
+      techlead:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1024M
+        reservations:
+          cpus: "0.50"
+          memory: 512M
+
+# --------------------------------------------------------------------------
+# Networks
+# --------------------------------------------------------------------------
+networks:
+  opencrew-net:
+    name: opencrew-net
+    driver: bridge
+
+# --------------------------------------------------------------------------
+# Volumes
+# --------------------------------------------------------------------------
+volumes:
+  redis-data:
+    name: opencrew-redis-data

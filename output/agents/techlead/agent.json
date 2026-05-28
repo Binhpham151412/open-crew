@@ -1,0 +1,10 @@
+{
+  "name": "techlead",
+  "display_name": "TechLead",
+  "url": "http://techlead:8010",
+  "version": "1.0.0",
+  "capabilities": ["arbitrate", "final_review", "merge_signoff"],
+  "input_types": ["agent_reports", "delivery_package"],
+  "output_types": ["final_approval"],
+  "protocol": "a2a/1.0"
+}

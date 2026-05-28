@@ -1,0 +1,36 @@
+{
+  "name": "frontend_dev",
+  "display_name": "Frontend Developer",
+  "url": "http://frontend_dev:8004",
+  "version": "1.0.0",
+  "capabilities": ["nextjs_react", "tailwind_css", "responsive_design"],
+  "input_types": ["user_story", "api_spec", "ui_spec"],
+  "output_types": ["nextjs_code"],
+  "protocol": "a2a/1.0",
+  "description": "Implements NextJS 14 components and pages with TypeScript, Tailwind CSS, and shadcn/ui. Handles responsive design, dark mode, loading/empty/error states, and API integration following the provided contract.",
+  "mcp_tools": {
+    "github_mcp": {
+      "access": "read_write",
+      "operations": ["create_branch", "commit_files", "create_pr", "get_file", "search_code"]
+    },
+    "context7": {
+      "access": "read_only",
+      "operations": ["resolve_library_id", "get_library_docs"],
+      "libraries": ["next.js", "react", "tailwindcss", "shadcn-ui"]
+    }
+  },
+  "push_to": ["uiux_reviewer"],
+  "rules": [
+    "npx tsc --noEmit && npm run lint must pass before push",
+    "Implement responsive design for mobile, tablet, and desktop breakpoints",
+    "Dark mode must be the default theme",
+    "All states must be implemented: loading, empty, error, and success",
+    "Follow the UI_SPEC.md design system for colors, typography, and spacing",
+    "Use shadcn/ui components where applicable",
+    "API calls must strictly follow the provided API contract",
+    "Self-review code quality before creating PR"
+  ],
+  "health_endpoint": "/health",
+  "a2a_endpoint": "/a2a",
+  "port": 8004
+}

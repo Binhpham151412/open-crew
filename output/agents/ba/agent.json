@@ -1,0 +1,10 @@
+{
+  "name": "ba",
+  "display_name": "Business Analyst",
+  "url": "http://ba:8002",
+  "version": "1.0.0",
+  "capabilities": ["write_user_stories", "api_contract", "data_model", "acceptance_criteria"],
+  "input_types": ["story"],
+  "output_types": ["user_stories", "api_spec", "data_model"],
+  "protocol": "a2a/1.0"
+}

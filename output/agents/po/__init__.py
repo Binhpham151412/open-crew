@@ -1,0 +1,1 @@
+"""OpenCrew — Product Owner agent package."""

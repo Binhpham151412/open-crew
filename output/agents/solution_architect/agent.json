@@ -1,0 +1,53 @@
+{
+  "name": "solution_architect",
+  "display_name": "Solution Architect",
+  "url": "http://solution_architect:8003",
+  "version": "1.0.0",
+  "description": "Designs system architecture, creates Architecture Decision Records (ADRs), defines database schemas, and establishes service interfaces. Reviews code architecture and handles cross-cutting concerns.",
+  "capabilities": [
+    "system_design",
+    "adr",
+    "db_schema",
+    "interface_design"
+  ],
+  "input_types": [
+    "prd",
+    "story"
+  ],
+  "output_types": [
+    "adr",
+    "system_diagram",
+    "db_schema"
+  ],
+  "protocol": "a2a/1.0",
+  "mcp_tools": [
+    {
+      "name": "context7",
+      "access": "read",
+      "description": "Architecture patterns, best practices, domain knowledge"
+    },
+    {
+      "name": "github_mcp",
+      "access": "read",
+      "description": "Read existing codebase structure, inspect repository"
+    }
+  ],
+  "push_to": [
+    "backend_dev",
+    "devops"
+  ],
+  "receives_from": [
+    "pm"
+  ],
+  "endpoints": {
+    "a2a": "/a2a",
+    "health": "/health",
+    "agent_card": "/.well-known/agent.json"
+  },
+  "conflict_resolution_authority": "technical_architecture",
+  "retry_policy": {
+    "max_retries": 3,
+    "escalate_to": "techlead",
+    "timeout_minutes": 30
+  }
+}

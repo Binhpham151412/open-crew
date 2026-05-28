@@ -1,0 +1,21 @@
+{
+  "name": "qa",
+  "display_name": "QA / Tester",
+  "url": "http://qa:8008",
+  "version": "1.0.0",
+  "capabilities": [
+    "pytest",
+    "playwright",
+    "test_generation",
+    "bug_reporting"
+  ],
+  "input_types": [
+    "acceptance_criteria",
+    "source_code"
+  ],
+  "output_types": [
+    "test_suite",
+    "bug_reports"
+  ],
+  "protocol": "a2a/1.0"
+}

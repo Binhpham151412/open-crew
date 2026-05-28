@@ -1,0 +1,19 @@
+{
+  "name": "pm",
+  "display_name": "Project Manager",
+  "url": "http://pm:8001",
+  "version": "1.0.0",
+  "capabilities": [
+    "sprint_planning",
+    "story_assignment",
+    "progress_tracking"
+  ],
+  "input_types": [
+    "prd"
+  ],
+  "output_types": [
+    "sprint_plan",
+    "stories"
+  ],
+  "protocol": "a2a/1.0"
+}

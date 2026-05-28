@@ -1,0 +1,18 @@
+{
+  "name": "po",
+  "display_name": "Product Owner",
+  "url": "http://po:8000",
+  "version": "1.0.0",
+  "capabilities": [
+    "receive_requirements",
+    "write_prd",
+    "accept_reject"
+  ],
+  "input_types": [
+    "user_request"
+  ],
+  "output_types": [
+    "prd"
+  ],
+  "protocol": "a2a/1.0"
+}
