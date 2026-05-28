@@ -352,4 +352,3 @@ class Registry:
     def __repr__(self) -> str:
         backend = "redis" if isinstance(self._store, _RedisStore) else "in_memory"
         return f"<Registry backend={backend} seeds={len(self._seed_agents)}>"
-</content>

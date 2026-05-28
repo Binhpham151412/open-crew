@@ -52,18 +52,18 @@ interface StatsResponse {
 // Constants
 // ---------------------------------------------------------------------------
 
-const AGENTS: { name: string; displayName: string; port: number }[] = [
-  { name: "po", displayName: "Product Owner", port: 8000 },
-  { name: "pm", displayName: "Project Manager", port: 8001 },
-  { name: "ba", displayName: "Business Analyst", port: 8002 },
-  { name: "solution-architect", displayName: "Solution Architect", port: 8003 },
-  { name: "frontend-dev", displayName: "Frontend Developer", port: 8004 },
-  { name: "backend-dev", displayName: "Backend Developer", port: 8005 },
-  { name: "uiux-reviewer", displayName: "UIUX Reviewer", port: 8006 },
-  { name: "security-reviewer", displayName: "Security Reviewer", port: 8007 },
-  { name: "qa", displayName: "QA / Tester", port: 8008 },
-  { name: "devops", displayName: "DevOps / SRE", port: 8009 },
-  { name: "techlead", displayName: "TechLead", port: 8010 },
+const AGENTS: { name: string; displayName: string; port: number; url: string }[] = [
+  { name: "po", displayName: "Product Owner", port: 8000, url: process.env.PO_URL ?? "http://localhost:8000" },
+  { name: "pm", displayName: "Project Manager", port: 8001, url: process.env.PM_URL ?? "http://localhost:8001" },
+  { name: "ba", displayName: "Business Analyst", port: 8002, url: process.env.BA_URL ?? "http://localhost:8002" },
+  { name: "solution-architect", displayName: "Solution Architect", port: 8003, url: process.env.SA_URL ?? "http://localhost:8003" },
+  { name: "frontend-dev", displayName: "Frontend Developer", port: 8004, url: process.env.FRONTEND_DEV_URL ?? "http://localhost:8004" },
+  { name: "backend-dev", displayName: "Backend Developer", port: 8005, url: process.env.BACKEND_DEV_URL ?? "http://localhost:8005" },
+  { name: "uiux-reviewer", displayName: "UIUX Reviewer", port: 8006, url: process.env.UIUX_REVIEWER_URL ?? "http://localhost:8006" },
+  { name: "security-reviewer", displayName: "Security Reviewer", port: 8007, url: process.env.SECURITY_REVIEWER_URL ?? "http://localhost:8007" },
+  { name: "qa", displayName: "QA / Tester", port: 8008, url: process.env.QA_URL ?? "http://localhost:8008" },
+  { name: "devops", displayName: "DevOps / SRE", port: 8009, url: process.env.DEVOPS_URL ?? "http://localhost:8009" },
+  { name: "techlead", displayName: "TechLead", port: 8010, url: process.env.TECHLEAD_URL ?? "http://localhost:8010" },
 ];
 
 const REDIS_URL = process.env.REDIS_URL ?? "redis://localhost:6379";
@@ -109,18 +109,6 @@ async function fetchJson<T>(url: string, timeoutMs = 2000): Promise<T | null> {
   } catch {
     return null;
   }
-}
-
-/**
- * Resolve the base URL for an agent given its port.
- * Inside Docker Compose the hostname matches the service name;
- * from the host machine we hit localhost.
- */
-function agentBaseUrl(port: number): string {
-  // Prefer Docker-internal hostnames when running inside the compose network.
-  // The AGENT_HOST env var can override to "localhost" for local dev.
-  const host = process.env.AGENT_HOST ?? "localhost";
-  return `http://${host}:${port}`;
 }
 
 /**
@@ -208,7 +196,7 @@ export async function GET(): Promise<NextResponse<StatsResponse | { error: strin
   try {
     // Parallel fetches: agent health checks + token records + system start time
     const healthChecks = await Promise.allSettled(
-      AGENTS.map((a) => fetchJson<AgentHealth>(`${agentBaseUrl(a.port)}/health`)),
+      AGENTS.map((a) => fetchJson<AgentHealth>(`${a.url}/health`)),
     );
 
     const [tokenRecords, systemStart] = await Promise.all([

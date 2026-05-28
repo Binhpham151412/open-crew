@@ -1,0 +1,88 @@
+# ==========================================================================
+# OpenCrew — Hugging Face Spaces (Single Container)
+# All 11 agents + Redis + Web UI in one container
+# ==========================================================================
+
+FROM python:3.11-slim AS base
+
+# ---- System dependencies ----
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    libpq5 \
+    redis-server \
+    supervisor \
+    gnupg \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---- Install Node.js 20 ----
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# ---- Create non-root user ----
+RUN groupadd --gid 1000 appuser && \
+    useradd --uid 1000 --gid 1000 --shell /bin/bash --create-home appuser
+
+WORKDIR /app
+
+# ---- Install Python dependencies ----
+COPY shared/requirements.txt /tmp/shared-req.txt
+RUN pip install --no-cache-dir --timeout=120 --retries=5 \
+    fastapi uvicorn httpx pydantic python-dotenv structlog redis
+
+# ---- Copy shared library ----
+COPY shared/ ./shared/
+RUN touch shared/__init__.py
+
+# ---- Copy all agents ----
+COPY agents/ ./agents/
+
+# ---- Build Next.js web ----
+COPY web/package.json web/package-lock.json* ./web/
+RUN cd web && npm install --legacy-peer-deps
+
+COPY web/ ./web/
+RUN cd web && npm run build
+
+# Prepare standalone output for production
+RUN cd web && \
+    cp -r .next/standalone ./standalone && \
+    cp -r .next/static ./standalone/.next/static && \
+    cp -r public ./standalone/public 2>/dev/null || true
+
+# ---- Configuration ----
+COPY supervisord.conf /etc/supervisor/conf.d/opencrew.conf
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# ---- Create log directories ----
+RUN mkdir -p /var/log/supervisor /app/logs
+
+# ---- Set ownership ----
+RUN chown -R appuser:appuser /app /var/log/supervisor
+
+# ---- Environment variables ----
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV NODE_ENV=production
+ENV REDIS_URL=redis://localhost:6379/0
+ENV NEXT_PUBLIC_API_URL=http://localhost:7860/api
+
+# Agent URLs (localhost since all in one container)
+ENV PO_URL=http://localhost:8000
+ENV PM_URL=http://localhost:8001
+ENV BA_URL=http://localhost:8002
+ENV SA_URL=http://localhost:8003
+ENV FRONTEND_DEV_URL=http://localhost:8004
+ENV BACKEND_DEV_URL=http://localhost:8005
+ENV UIUX_REVIEWER_URL=http://localhost:8006
+ENV SECURITY_REVIEWER_URL=http://localhost:8007
+ENV QA_URL=http://localhost:8008
+ENV DEVOPS_URL=http://localhost:8009
+ENV TECHLEAD_URL=http://localhost:8010
+
+EXPOSE 7860
+
+CMD ["/app/start.sh"]

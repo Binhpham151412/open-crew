@@ -9,6 +9,7 @@ interface AgentMeta {
   name: string;
   displayName: string;
   port: number;
+  url: string;
   role: string;
   layer: string;
   tools: string[];
@@ -21,6 +22,7 @@ const AGENTS: AgentMeta[] = [
     name: "po",
     displayName: "Product Owner",
     port: 8000,
+    url: process.env.PO_URL ?? `http://localhost:8000`,
     role: "Continues nhận yêu cầu từ user, viết PRD, định nghĩa DoD",
     layer: "Strategy",
     tools: ["linear_mcp", "context7"],
@@ -31,6 +33,7 @@ const AGENTS: AgentMeta[] = [
     name: "pm",
     displayName: "Project Manager",
     port: 8001,
+    url: process.env.PM_URL ?? `http://localhost:8001`,
     role: "Phân rã PRD thành Stories + Tasks, sprint plan, assign",
     layer: "Strategy",
     tools: ["linear_mcp", "github_mcp"],
@@ -41,6 +44,7 @@ const AGENTS: AgentMeta[] = [
     name: "ba",
     displayName: "Business Analyst",
     port: 8002,
+    url: process.env.BA_URL ?? `http://localhost:8002`,
     role: "User Stories, Acceptance Criteria, API contract, data model",
     layer: "Analysis",
     tools: ["context7", "linear_mcp"],
@@ -51,6 +55,7 @@ const AGENTS: AgentMeta[] = [
     name: "solution-architect",
     displayName: "Solution Architect",
     port: 8003,
+    url: process.env.SA_URL ?? `http://localhost:8003`,
     role: "System architecture, ADR, DB schema, interface contracts",
     layer: "Design",
     tools: ["context7", "github_mcp"],
@@ -61,6 +66,7 @@ const AGENTS: AgentMeta[] = [
     name: "frontend-dev",
     displayName: "Frontend Developer",
     port: 8004,
+    url: process.env.FRONTEND_DEV_URL ?? `http://localhost:8004`,
     role: "NextJS 14 implementation, responsive, dark mode",
     layer: "Build",
     tools: ["github_mcp", "context7"],
@@ -71,6 +77,7 @@ const AGENTS: AgentMeta[] = [
     name: "backend-dev",
     displayName: "Backend Developer",
     port: 8005,
+    url: process.env.BACKEND_DEV_URL ?? `http://localhost:8005`,
     role: "FastAPI endpoints, business logic, data access layer",
     layer: "Build",
     tools: ["github_mcp", "context7"],
@@ -81,6 +88,7 @@ const AGENTS: AgentMeta[] = [
     name: "uiux-reviewer",
     displayName: "UIUX Reviewer",
     port: 8006,
+    url: process.env.UIUX_REVIEWER_URL ?? `http://localhost:8006`,
     role: "WCAG 2.1 AA accessibility, spacing, responsive review",
     layer: "Quality",
     tools: ["github_mcp", "opendesign_mcp"],
@@ -91,6 +99,7 @@ const AGENTS: AgentMeta[] = [
     name: "security-reviewer",
     displayName: "Security Reviewer",
     port: 8007,
+    url: process.env.SECURITY_REVIEWER_URL ?? `http://localhost:8007`,
     role: "OWASP Top 10, CVE check, secret scan",
     layer: "Quality",
     tools: ["github_mcp", "context7"],
@@ -101,6 +110,7 @@ const AGENTS: AgentMeta[] = [
     name: "qa",
     displayName: "QA / Tester",
     port: 8008,
+    url: process.env.QA_URL ?? `http://localhost:8008`,
     role: "pytest + Playwright, bug reports, coverage analysis",
     layer: "Quality",
     tools: ["github_mcp", "context7"],
@@ -111,6 +121,7 @@ const AGENTS: AgentMeta[] = [
     name: "devops",
     displayName: "DevOps / SRE",
     port: 8009,
+    url: process.env.DEVOPS_URL ?? `http://localhost:8009`,
     role: "Docker, CI/CD, deployment, monitoring",
     layer: "Delivery",
     tools: ["github_mcp", "context7"],
@@ -121,6 +132,7 @@ const AGENTS: AgentMeta[] = [
     name: "techlead",
     displayName: "TechLead",
     port: 8010,
+    url: process.env.TECHLEAD_URL ?? `http://localhost:8010`,
     role: "Final review, arbitrate conflicts, sign-off delivery",
     layer: "Final Gate",
     tools: ["github_mcp", "linear_mcp"],
@@ -144,8 +156,8 @@ interface HealthResult {
  * Ping a single agent's `/health` endpoint with a short timeout.
  * Returns a normalised HealthResult regardless of outcome.
  */
-async function checkAgentHealth(port: number): Promise<HealthResult> {
-  const url = `http://localhost:${port}/health`;
+async function checkAgentHealth(agentUrl: string): Promise<HealthResult> {
+  const url = `${agentUrl}/health`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 3000); // 3 s timeout
 
@@ -248,7 +260,7 @@ interface AgentsListResponse {
 export async function GET(_request: NextRequest): Promise<NextResponse> {
   // Fire all health checks concurrently
   const healthChecks = await Promise.allSettled(
-    AGENTS.map((agent) => checkAgentHealth(agent.port)),
+    AGENTS.map((agent) => checkAgentHealth(agent.url)),
   );
 
   const agents: AgentResponse[] = AGENTS.map((agent, index) => {

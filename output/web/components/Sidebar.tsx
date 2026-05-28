@@ -53,10 +53,8 @@ export function Sidebar() {
 
   // ---------- collapse state (persisted) ----------
   const [collapsed, setCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored !== null) {
@@ -89,21 +87,10 @@ export function Sidebar() {
   const mainItems = navItems.filter((i) => i.group === "main");
   const systemItems = navItems.filter((i) => i.group === "system");
 
-  // Avoid hydration mismatch: render nothing until mounted
-  if (!mounted) {
-    return (
-      <aside
-        className="shrink-0 bg-slate-900 border-r border-slate-700/60 flex flex-col"
-        style={{ width: 240 }}
-        aria-label="Sidebar navigation"
-      />
-    );
-  }
-
   return (
     <aside
       className={`
-        shrink-0 bg-slate-900 border-r border-slate-700/60
+        shrink-0 bg-slate-800 border-r border-slate-700
         flex flex-col transition-[width] duration-200 ease-in-out
         overflow-hidden select-none
       `}
@@ -111,17 +98,19 @@ export function Sidebar() {
       aria-label="Sidebar navigation"
     >
       {/* ---- Main nav ---- */}
-      <nav className="flex-1 py-3 px-2 flex flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 py-4 flex flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
         <NavGroup
+          label="Main"
           items={mainItems}
           collapsed={collapsed}
           isActive={isActive}
         />
 
         {/* Divider */}
-        <div className="my-2 mx-2 border-t border-slate-700/60" />
+        <div className="my-2 mx-4 border-t border-slate-700" />
 
         <NavGroup
+          label="System"
           items={systemItems}
           collapsed={collapsed}
           isActive={isActive}
@@ -129,14 +118,14 @@ export function Sidebar() {
       </nav>
 
       {/* ---- Collapse toggle ---- */}
-      <div className="px-2 pb-3 pt-1">
+      <div className="px-5 pb-4 pt-1">
         <button
           type="button"
           onClick={toggleCollapsed}
           className={`
-            flex items-center gap-3 w-full rounded-md px-3 py-2
+            no-underline flex items-center gap-3 w-full rounded-md px-3 py-2
             text-sm font-medium text-slate-400
-            hover:bg-slate-800 hover:text-slate-200
+            hover:bg-slate-800/60 hover:text-slate-200
             transition-colors duration-150
             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
           `}
@@ -144,10 +133,10 @@ export function Sidebar() {
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
-            <ChevronRight className="h-5 w-5 shrink-0" />
+            <ChevronRight className="h-[18px] w-[18px] shrink-0" />
           ) : (
             <>
-              <ChevronLeft className="h-5 w-5 shrink-0" />
+              <ChevronLeft className="h-[18px] w-[18px] shrink-0" />
               <span className="truncate">Collapse</span>
             </>
           )}
@@ -162,16 +151,25 @@ export function Sidebar() {
 // ---------------------------------------------------------------------------
 
 function NavGroup({
+  label,
   items,
   collapsed,
   isActive,
 }: {
+  label: string;
   items: NavItem[];
   collapsed: boolean;
   isActive: (href: string) => boolean;
 }) {
   return (
-    <>
+    <div className="px-3">
+      {/* Section label — hidden when collapsed */}
+      {!collapsed && (
+        <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 px-3 pb-1 mb-0.5">
+          {label}
+        </div>
+      )}
+
       {items.map((item) => {
         const active = isActive(item.href);
         const Icon = item.icon;
@@ -180,14 +178,15 @@ function NavGroup({
           <Link
             key={item.href}
             href={item.href}
+            data-nav-item="true"
             className={`
-              group relative flex items-center gap-3 rounded-md px-3 py-2
+              no-underline group relative flex items-center gap-3 rounded-md px-3 py-2
               text-sm font-medium transition-colors duration-150
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
               ${
                 active
-                  ? "bg-blue-600/15 text-blue-400"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                  ? "bg-blue-600/90 text-white"
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-slate-50"
               }
             `}
             aria-current={active ? "page" : undefined}
@@ -196,24 +195,34 @@ function NavGroup({
             {/* Active indicator bar */}
             {active && (
               <span
-                className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-blue-500"
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-white"
                 aria-hidden="true"
               />
             )}
 
             <Icon
               className={`
-                h-5 w-5 shrink-0 transition-colors duration-150
+                h-[18px] w-[18px] shrink-0 transition-colors duration-150
                 ${
                   active
-                    ? "text-blue-400"
-                    : "text-slate-500 group-hover:text-slate-300"
+                    ? "text-white opacity-100"
+                    : "text-slate-400 opacity-80 group-hover:opacity-100 group-hover:text-slate-200"
                 }
               `}
             />
 
             {/* Label — hidden when collapsed */}
-            {!collapsed && <span className="truncate">{item.label}</span>}
+            {!collapsed && (
+              <span
+                className={`truncate ${
+                  active
+                    ? "text-white"
+                    : "text-slate-300 group-hover:text-slate-50"
+                }`}
+              >
+                {item.label}
+              </span>
+            )}
 
             {/* Tooltip when collapsed */}
             {collapsed && (
@@ -235,6 +244,6 @@ function NavGroup({
           </Link>
         );
       })}
-    </>
+    </div>
   );
 }

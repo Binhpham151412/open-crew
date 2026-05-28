@@ -166,7 +166,7 @@ function PhaseConnector({ variant = "default" }: { variant?: "default" | "escala
       ? "border-red-500/40"
       : variant === "final"
         ? "border-emerald-500/40"
-        : "border-slate-700/60";
+        : "border-slate-700";
 
   return (
     <div className="flex justify-center py-1">
@@ -242,13 +242,13 @@ function DebateMessageCard({
 
       {/* Agents involved */}
       <div className="flex items-center gap-1.5 mb-3 text-xs">
-        <span className="inline-flex items-center gap-1 rounded bg-slate-800/80 px-2 py-0.5 font-medium text-slate-200 border border-slate-700/60">
+        <span className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-0.5 font-medium text-slate-200 border border-slate-700">
           {formatAgentName(message.from)}
         </span>
         <span className={`text-sm ${meta.color}`} aria-hidden="true">
           →
         </span>
-        <span className="inline-flex items-center gap-1 rounded bg-slate-800/80 px-2 py-0.5 font-medium text-slate-200 border border-slate-700/60">
+        <span className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-0.5 font-medium text-slate-200 border border-slate-700">
           {formatAgentName(message.to)}
         </span>
         <span className="ml-auto text-[11px] text-slate-500 font-mono">

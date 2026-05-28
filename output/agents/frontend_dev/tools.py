@@ -459,6 +459,11 @@ async def generate_component(
     imports = "\n".join(import_lines)
 
     # Generate component code
+    prop_names = [p["name"] for p in props]
+    prop_preview_lines = [f"  {name}={{...}}" for name in prop_names[:3]]
+    prop_preview = chr(10).join(prop_preview_lines)
+    prop_params = ", ".join(prop_names)
+
     component_code = f'''{imports}
 
 interface {component_name}Props {{
@@ -471,10 +476,10 @@ interface {component_name}Props {{
  * @component
  * @example
  * ```tsx
- * <{component_name} {chr(10).join(f"  {p["name"]}={{...}}" for p in props[:3])} />
+ * <{component_name} {prop_preview} />
  * ```
  */
-export function {component_name}({{{", ".join(p["name"] for p in props)}}}: {component_name}Props) {{
+export function {component_name}({{{prop_params}}}: {component_name}Props) {{
   return (
     <div
       className={{cn(
@@ -541,15 +546,17 @@ async def generate_page(
     for section in sections:
         section_name = section.get("name", "Section")
         section_desc = section.get("description", "")
+        jsx_comment = "{/* " + section_name + " */}"
+        content_comment = "{{/* " + section_name + " content */}}"
         section_components.append(f"""
-      {/* {section_name} */}
+      {jsx_comment}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-slate-50">
           {section_name}
         </h2>
         <p className="text-sm text-slate-400">{section_desc}</p>
         <div className="rounded-lg bg-slate-800 p-6">
-          {{/* {section_name} content */}}
+          {content_comment}
         </div>
       </section>""")
 

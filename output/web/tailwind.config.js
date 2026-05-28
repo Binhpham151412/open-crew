@@ -193,19 +193,19 @@ module.exports = {
         // Status dot utilities
         ".status-online": {
           backgroundColor: typeof colors.success === "object" ? colors.success.DEFAULT : colors.success,
-          boxShadow: `0 0 6px 1px ${typeof colors.success === "object" ? colors.success.DEFAULT : colors.success}66`,
+          boxShadow: "0 0 6px 1px #16A34A66",
         },
         ".status-offline": {
           backgroundColor: typeof colors.muted === "string" ? colors.muted : "#94A3B8",
         },
         ".status-working": {
           backgroundColor: typeof colors.warning === "object" ? colors.warning.DEFAULT : colors.warning,
-          boxShadow: `0 0 6px 1px ${typeof colors.warning === "object" ? colors.warning.DEFAULT : colors.warning}66`,
+          boxShadow: "0 0 6px 1px #D9770666",
           animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         },
         ".status-error": {
           backgroundColor: typeof colors.danger === "object" ? colors.danger.DEFAULT : colors.danger,
-          boxShadow: `0 0 6px 1px ${typeof colors.danger === "object" ? colors.danger.DEFAULT : colors.danger}66`,
+          boxShadow: "0 0 6px 1px #DC262666",
         },
         // Log level color utilities
         ".log-info": {
@@ -223,7 +223,7 @@ module.exports = {
         // Scrollbar styling for dark theme
         ".scrollbar-thin": {
           scrollbarWidth: "thin",
-          scrollbarColor: `${typeof colors.border === "string" ? colors.border : "#334155"} transparent",
+          scrollbarColor: (typeof colors.border === "string" ? colors.border : "#334155") + " transparent",
           "&::-webkit-scrollbar": {
             width: "6px",
             height: "6px",

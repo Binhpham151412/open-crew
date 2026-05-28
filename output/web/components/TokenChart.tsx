@@ -162,7 +162,7 @@ function CustomTooltip({
               {formatNumber(item.value)}
             </span>
           </div>
-        )}
+        ))}
       </div>
       <div className="mt-2 pt-1.5 border-t border-slate-600 flex justify-between">
         <span className="text-slate-400">Day total</span>
@@ -191,7 +191,7 @@ export function TokenChart({
 
   return (
     <section
-      className={`rounded-xl border border-slate-700/60 bg-slate-800/50 backdrop-blur p-4 lg:p-5 ${className ?? ""}`}
+      className={`rounded-xl border border-slate-700 bg-slate-800 p-4 lg:p-5 ${className ?? ""}`}
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-4">

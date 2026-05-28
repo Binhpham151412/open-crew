@@ -131,7 +131,7 @@ function SettingsPanel({
   };
 
   return (
-    <div className="mt-4 border-t border-slate-700/60 pt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+    <div className="mt-4 border-t border-slate-700 pt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
       {/* Model */}
       <div className="space-y-1.5">
         <label
@@ -269,7 +269,7 @@ export function AgentCard({
 
   return (
     <div
-      className={`rounded-lg border border-slate-700/60 bg-slate-800/80 backdrop-blur-sm p-4 transition-all hover:border-slate-600/80 ${
+      className={`rounded-lg border border-slate-700 bg-slate-800 p-4 transition-all hover:border-slate-600 ${
         !enabled ? "opacity-60" : ""
       } ${className ?? ""}`}
     >

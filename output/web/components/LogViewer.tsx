@@ -311,9 +311,9 @@ export function LogViewer({
 
   // ----- Render -----
   return (
-    <div className="flex flex-col h-full rounded-lg border border-slate-700/60 bg-slate-900 overflow-hidden">
+    <div className="flex flex-col h-full rounded-lg border border-slate-700 bg-slate-900 overflow-hidden">
       {/* ── Header / Toolbar ── */}
-      <div className="shrink-0 border-b border-slate-700/60 bg-slate-900/95 backdrop-blur">
+      <div className="shrink-0 border-b border-slate-700 bg-slate-800">
         {/* Row 1: Title + stats + actions */}
         <div className="flex items-center justify-between px-4 py-2.5 gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -547,7 +547,7 @@ export function LogViewer({
       </div>
 
       {/* ── Footer ── */}
-      <div className="shrink-0 border-t border-slate-700/60 bg-slate-900/95 px-4 py-1.5 flex items-center justify-between text-[11px] text-slate-500">
+      <div className="shrink-0 border-t border-slate-700 bg-slate-800 px-4 py-1.5 flex items-center justify-between text-[11px] text-slate-500">
         <span>
           {filteredLogs.length} displayed
           {filterAgent !== "all" || filterLevel !== "all" || searchQuery
